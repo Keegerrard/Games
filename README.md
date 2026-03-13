@@ -29,10 +29,4 @@ Then open:
 
 - [http://localhost:8000](http://localhost:8000)
 
-## Showcase Flow Suggestion
 
-For interviews, a fast flow:
-
-1. Start with `index.html` launcher.
-2. Demo 2-3 different genres (e.g. Snake, Wordle, Reeborg).
-3. Mention features: keyboard controls, responsive UI, score/stats, game reset.
