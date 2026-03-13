@@ -1,0 +1,168 @@
+:root {
+  --pro-bg: #f3f6fb;
+  --pro-surface: #ffffff;
+  --pro-border: #d9e2ef;
+  --pro-text: #0f172a;
+  --pro-muted: #475569;
+  --pro-primary: #2563eb;
+  --pro-primary-hover: #1d4ed8;
+  --pro-success: #16a34a;
+  --pro-danger: #dc2626;
+  --pro-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+body,
+.snake-game-wrapper,
+.typing-game-wrapper {
+  background: var(--pro-bg) !important;
+}
+
+.container,
+.snake-game-wrapper .snake-container,
+.typing-game-wrapper .typing-container,
+.game-container {
+  background: var(--pro-surface) !important;
+  border: 1px solid var(--pro-border) !important;
+  box-shadow: var(--pro-shadow) !important;
+  color: var(--pro-text) !important;
+}
+
+h1,
+.title,
+.game-title,
+.typing-title {
+  color: var(--pro-text) !important;
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+.subtitle,
+.game-subtitle {
+  color: var(--pro-muted) !important;
+}
+
+.score,
+.stat-card,
+.stat-item,
+.typing-game-wrapper .typing-word-display,
+.typing-game-wrapper .progress-container,
+.typing-game-wrapper .difficulty-selector,
+.typing-game-wrapper .controls,
+.game-stats,
+.progress-container,
+.game-board,
+.word-display,
+.game-info,
+.stats {
+  background: #f8fafc !important;
+  border: 1px solid var(--pro-border) !important;
+  color: var(--pro-text) !important;
+  box-shadow: none !important;
+}
+
+.typing-game-wrapper .typing-word-display::before,
+.word-display::before,
+body::before,
+body::after {
+  display: none !important;
+}
+
+button,
+.btn,
+.key,
+.snake-game-wrapper .snake-btn,
+.typing-game-wrapper .typing-btn,
+.generate-btn,
+#guess-btn,
+#hangman-guess-btn,
+#hangman-new-game-btn {
+  background: var(--pro-primary) !important;
+  color: #fff !important;
+  border: 1px solid var(--pro-primary) !important;
+  box-shadow: none !important;
+  text-transform: none !important;
+}
+
+button:hover,
+.btn:hover,
+.key:hover,
+.snake-game-wrapper .snake-btn:hover,
+.typing-game-wrapper .typing-btn:hover,
+.generate-btn:hover,
+#guess-btn:hover,
+#hangman-guess-btn:hover,
+#hangman-new-game-btn:hover {
+  background: var(--pro-primary-hover) !important;
+  border-color: var(--pro-primary-hover) !important;
+  transform: none !important;
+}
+
+.btn.secondary,
+#startBtn,
+#typing-start-btn {
+  background: var(--pro-success) !important;
+  border-color: var(--pro-success) !important;
+}
+
+.game-message.lose,
+.message.error {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fecaca !important;
+}
+
+.game-message.win,
+.message.success {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.letter-box,
+.memory-card,
+.key,
+#guess-input,
+#hangman-guess-input,
+.typing-game-wrapper .typing-input {
+  border-radius: 10px !important;
+}
+
+.memory-card {
+  background: #e2e8f0 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.card-front {
+  background: #e2e8f0 !important;
+}
+
+.card-back {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+#snake-canvas {
+  border-color: #94a3b8 !important;
+  box-shadow: none !important;
+}
+
+.key.correct,
+.letter-box.correct {
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #fff !important;
+}
+
+.key.present,
+.letter-box.present {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #fff !important;
+}
+
+.key.absent,
+.letter-box.absent {
+  background: #64748b !important;
+  border-color: #64748b !important;
+  color: #fff !important;
+}

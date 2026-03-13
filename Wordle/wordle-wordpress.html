@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle Game - Guess the Word!</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* WordPress-compatible CSS with more specific selectors */
+      .wordle-game-container * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      .wordle-game-container {
+        font-family: "Poppins", sans-serif !important;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 100%
+        ) !important;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        color: #fff !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+        z-index: 999 !important;
+      }
+
+      .wordle-game-container .container {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(20px) !important;
+        border-radius: 25px !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+        padding: 30px !important;
+        max-width: 500px !important;
+        width: 95% !important;
+        margin: 20px auto !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      }
+
+      .wordle-game-container .header {
+        text-align: center !important;
+        margin-bottom: 30px !important;
+      }
+
+      .wordle-game-container .title {
+        font-size: 3rem !important;
+        font-weight: 700 !important;
+        color: #fff !important;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+        margin-bottom: 10px !important;
+        letter-spacing: 2px !important;
+      }
+
+      .wordle-game-container .subtitle {
+        font-size: 1.1rem !important;
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-weight: 400 !important;
+      }
+
+      .wordle-game-container .game-info {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        margin-bottom: 25px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      }
+
+      .wordle-game-container .attempts,
+      .wordle-game-container .score {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+      }
+
+      .wordle-game-container .game-board {
+        display: grid !important;
+        grid-template-rows: repeat(6, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 30px !important;
+        padding: 20px !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      }
+
+      .wordle-game-container .guess-row {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .wordle-game-container .letter-box {
+        width: 60px !important;
+        height: 60px !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.8rem !important;
+        font-weight: bold !important;
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s ease !important;
+        text-transform: uppercase !important;
+      }
+
+      .wordle-game-container .letter-box.filled {
+        border-color: #fff !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        transform: scale(1.05) !important;
+      }
+
+      .wordle-game-container .letter-box.correct {
+        background: linear-gradient(45deg, #4caf50, #45a049) !important;
+        border-color: #4caf50 !important;
+        color: #fff !important;
+        animation: flip 0.6s ease-in-out !important;
+      }
+
+      .wordle-game-container .letter-box.present {
+        background: linear-gradient(45deg, #ff9800, #f57c00) !important;
+        border-color: #ff9800 !important;
+        color: #fff !important;
+        animation: flip 0.6s ease-in-out !important;
+      }
+
+      .wordle-game-container .letter-box.absent {
+        background: linear-gradient(45deg, #757575, #424242) !important;
+        border-color: #757575 !important;
+        color: #fff !important;
+        animation: flip 0.6s ease-in-out !important;
+      }
+
+      .wordle-game-container .keyboard {
+        display: grid !important;
+        grid-template-rows: repeat(3, 1fr) !important;
+        gap: 8px !important;
+        max-width: 500px !important;
+        margin: 0 auto !important;
+      }
+
+      .wordle-game-container .keyboard-row {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 6px !important;
+      }
+
+      .wordle-game-container .key {
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #333 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 12px 8px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        min-width: 35px !important;
+        height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+      }
+
+      .wordle-game-container .key:hover {
+        background: #fff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      .wordle-game-container .key.wide {
+        min-width: 60px !important;
+        font-size: 0.9rem !important;
+      }
+
+      .wordle-game-container .key#key-DELETE {
+        background: rgba(255, 152, 0, 0.9) !important;
+        color: #fff !important;
+        font-size: 1.2rem !important;
+        font-weight: bold !important;
+      }
+
+      .wordle-game-container .key#key-DELETE:hover {
+        background: rgba(255, 152, 0, 1) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(255, 152, 0, 0.5) !important;
+      }
+
+      .wordle-game-container .key#key-ENTER {
+        background: rgba(76, 175, 80, 0.9) !important;
+        color: #fff !important;
+      }
+
+      .wordle-game-container .key#key-ENTER:hover {
+        background: rgba(76, 175, 80, 1) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(76, 175, 80, 0.5) !important;
+      }
+
+      .wordle-game-container .key.correct {
+        background: linear-gradient(45deg, #4caf50, #45a049) !important;
+        color: #fff !important;
+      }
+
+      .wordle-game-container .key.present {
+        background: linear-gradient(45deg, #ff9800, #f57c00) !important;
+        color: #fff !important;
+      }
+
+      .wordle-game-container .key.absent {
+        background: linear-gradient(45deg, #757575, #424242) !important;
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+
+      .wordle-game-container .message {
+        text-align: center !important;
+        padding: 15px !important;
+        border-radius: 10px !important;
+        margin: 20px 0 !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+        opacity: 0 !important;
+        transform: translateY(-20px) !important;
+        transition: all 0.3s ease !important;
+      }
+
+      .wordle-game-container .message.show {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+      }
+
+      .wordle-game-container .message.success {
+        background: linear-gradient(45deg, #4caf50, #45a049) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important;
+      }
+
+      .wordle-game-container .message.error {
+        background: linear-gradient(45deg, #f44336, #d32f2f) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4) !important;
+      }
+
+      .wordle-game-container .message.warning {
+        background: linear-gradient(45deg, #ff9800, #f57c00) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4) !important;
+      }
+
+      .wordle-game-container .controls {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 15px !important;
+        margin-top: 25px !important;
+      }
+
+      .wordle-game-container .btn {
+        background: linear-gradient(45deg, #667eea, #764ba2) !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 25px !important;
+        padding: 12px 25px !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+      }
+
+      .wordle-game-container .btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+      }
+
+      .wordle-game-container .btn.secondary {
+        background: linear-gradient(45deg, #4caf50, #45a049) !important;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important;
+      }
+
+      .wordle-game-container .btn.secondary:hover {
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6) !important;
+      }
+
+      .wordle-game-container .stats {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
+        padding: 20px !important;
+        margin-top: 20px !important;
+        text-align: center !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      }
+
+      .wordle-game-container .stats h3 {
+        margin-bottom: 15px !important;
+        font-size: 1.3rem !important;
+      }
+
+      .wordle-game-container .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 15px !important;
+        text-align: center !important;
+      }
+
+      .wordle-game-container .stat-item {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
+        padding: 15px 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      }
+
+      .wordle-game-container .stat-number {
+        font-size: 2rem !important;
+        font-weight: bold !important;
+        display: block !important;
+      }
+
+      .wordle-game-container .stat-label {
+        font-size: 0.9rem !important;
+        opacity: 0.8 !important;
+      }
+
+      @keyframes flip {
+        0% {
+          transform: rotateY(0);
+        }
+        50% {
+          transform: rotateY(90deg);
+        }
+        100% {
+          transform: rotateY(0);
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        60%,
+        100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        80% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .wordle-game-container .shake {
+        animation: shake 0.5s ease-in-out !important;
+      }
+
+      .wordle-game-container .bounce {
+        animation: bounce 0.6s ease-in-out !important;
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        .wordle-game-container .container {
+          padding: 20px !important;
+          margin: 10px !important;
+        }
+
+        .wordle-game-container .title {
+          font-size: 2.5rem !important;
+        }
+
+        .wordle-game-container .letter-box {
+          width: 50px !important;
+          height: 50px !important;
+          font-size: 1.5rem !important;
+        }
+
+        .wordle-game-container .key {
+          min-width: 30px !important;
+          height: 45px !important;
+          font-size: 0.9rem !important;
+        }
+
+        .wordle-game-container .key.wide {
+          min-width: 50px !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .wordle-game-container .title {
+          font-size: 2rem !important;
+        }
+
+        .wordle-game-container .letter-box {
+          width: 45px !important;
+          height: 45px !important;
+          font-size: 1.3rem !important;
+        }
+
+        .wordle-game-container .key {
+          min-width: 28px !important;
+          height: 40px !important;
+          font-size: 0.8rem !important;
+          padding: 8px 4px !important;
+        }
+
+        .wordle-game-container .key.wide {
+          min-width: 45px !important;
+        }
+
+        .wordle-game-container .game-info {
+          flex-direction: column !important;
+          gap: 10px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wordle-game-container">
+      <div class="container">
+        <div class="header">
+          <h1 class="title">WORDLE</h1>
+          <p class="subtitle">Guess the 5-letter word in 6 attempts!</p>
+        </div>
+
+        <div class="game-info">
+          <div class="attempts">Attempts: <span id="attempts">0/6</span></div>
+          <div class="score">Score: <span id="score">0</span></div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+          <!-- Game board will be generated by JavaScript -->
+        </div>
+
+        <div class="keyboard" id="keyboard">
+          <!-- Keyboard will be generated by JavaScript -->
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <div class="controls">
+          <button class="btn" id="newGameBtn">New Game</button>
+          <button class="btn secondary" id="hintBtn">Hint</button>
+        </div>
+
+        <div class="stats">
+          <h3>📊 Your Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-number" id="gamesPlayed">0</span>
+              <span class="stat-label">Games</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number" id="winPercentage">0%</span>
+              <span class="stat-label">Win Rate</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number" id="currentStreak">0</span>
+              <span class="stat-label">Streak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // Wordle Game Logic wrapped to avoid conflicts
+        class WordleGame {
+          constructor() {
+            this.words = [
+              "APPLE",
+              "BRAVE",
+              "CHAIR",
+              "DANCE",
+              "EAGLE",
+              "FLAME",
+              "GRACE",
+              "HAPPY",
+              "IMAGE",
+              "JUDGE",
+              "KNIFE",
+              "LIGHT",
+              "MAGIC",
+              "NOBLE",
+              "OCEAN",
+              "PEACE",
+              "QUEEN",
+              "RIVER",
+              "STORM",
+              "TRUST",
+              "UNITY",
+              "VALUE",
+              "WATER",
+              "YOUTH",
+              "ZEBRA",
+              "ABOUT",
+              "BEACH",
+              "CLEAN",
+              "DREAM",
+              "EARTH",
+              "FRESH",
+              "GREEN",
+              "HOUSE",
+              "IDEAL",
+              "JOLLY",
+              "LUCKY",
+              "MUSIC",
+              "NEVER",
+              "ORDER",
+              "PLANT",
+              "QUICK",
+              "READY",
+              "SHINE",
+              "THINK",
+              "UNDER",
+              "VOICE",
+              "WORLD",
+              "YEARS",
+              "ZONES",
+              "BIRTH",
+              "CARRY",
+              "DRIVE",
+              "EIGHT",
+              "FIGHT",
+              "GREAT",
+              "HEART",
+              "ISSUE",
+              "JOINT",
+              "KINDS",
+              "LEARN",
+              "MONTH",
+              "NIGHT",
+              "OTHER",
+              "POWER",
+              "QUIET",
+              "RIGHT",
+              "SMART",
+              "TRACK",
+              "USUAL",
+              "VISIT",
+              "WATCH",
+              "YOUNG",
+              "ZONAL",
+              "ALLOW",
+              "BOOKS",
+              "CLOUD",
+              "DRAFT",
+              "EVENT",
+              "FIELD",
+              "GUEST",
+              "HORSE",
+              "INPUT",
+              "JOKES",
+              "KNOCK",
+              "LEVEL",
+              "MIXER",
+              "NOISE",
+              "OPENS",
+              "PAIRS",
+              "QUOTE",
+            ];
+
+            this.currentWord = "";
+            this.currentGuess = "";
+            this.currentRow = 0;
+            this.gameOver = false;
+            this.guessedLetters = {};
+
+            this.stats = JSON.parse(localStorage.getItem("wordleStats")) || {
+              gamesPlayed: 0,
+              wins: 0,
+              currentStreak: 0,
+              maxStreak: 0,
+            };
+
+            this.initializeGame();
+            this.setupEventListeners();
+            this.updateStats();
+          }
+
+          initializeGame() {
+            this.currentWord =
+              this.words[Math.floor(Math.random() * this.words.length)];
+            this.currentGuess = "";
+            this.currentRow = 0;
+            this.gameOver = false;
+            this.guessedLetters = {};
+
+            this.createGameBoard();
+            this.createKeyboard();
+            this.hideMessage();
+          }
+
+          createGameBoard() {
+            const gameBoard = document.getElementById("gameBoard");
+            if (!gameBoard) return;
+            gameBoard.innerHTML = "";
+
+            for (let i = 0; i < 6; i++) {
+              const row = document.createElement("div");
+              row.className = "guess-row";
+              row.id = `row-${i}`;
+
+              for (let j = 0; j < 5; j++) {
+                const box = document.createElement("div");
+                box.className = "letter-box";
+                box.id = `box-${i}-${j}`;
+                row.appendChild(box);
+              }
+
+              gameBoard.appendChild(row);
+            }
+          }
+
+          createKeyboard() {
+            const keyboard = document.getElementById("keyboard");
+            if (!keyboard) return;
+
+            const rows = [
+              ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+              ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+              ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "DELETE"],
+            ];
+
+            // Clear existing keyboard completely
+            keyboard.innerHTML = "";
+            keyboard.removeEventListener("click", this.keyboardClickHandler);
+
+            rows.forEach((row) => {
+              const rowElement = document.createElement("div");
+              rowElement.className = "keyboard-row";
+
+              row.forEach((key) => {
+                const keyElement = document.createElement("button");
+                keyElement.className = "key";
+                keyElement.setAttribute("data-key", key); // Use data attribute instead
+
+                // Special handling for special buttons
+                if (key === "DELETE") {
+                  keyElement.textContent = "⌫"; // Backspace symbol
+                  keyElement.title = "Delete"; // Tooltip
+                } else if (key === "ENTER") {
+                  keyElement.textContent = "ENTER";
+                  keyElement.title = "Enter";
+                } else {
+                  keyElement.textContent = key;
+                }
+
+                keyElement.id = `key-${key}`;
+
+                if (key === "ENTER" || key === "DELETE") {
+                  keyElement.className += " wide";
+                }
+
+                rowElement.appendChild(keyElement);
+              });
+
+              keyboard.appendChild(rowElement);
+            });
+
+            // Use event delegation instead of individual listeners
+            this.keyboardClickHandler = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              if (e.target.classList.contains("key")) {
+                const key = e.target.getAttribute("data-key");
+                console.log("Keyboard button clicked:", key);
+                this.handleKeyClick(key);
+              }
+            };
+
+            keyboard.addEventListener("click", this.keyboardClickHandler);
+            console.log("Keyboard created successfully");
+          }
+
+          setupEventListeners() {
+            // Remove existing listeners if any
+            if (this.keydownHandler) {
+              document.removeEventListener("keydown", this.keydownHandler);
+            }
+
+            // Create new keydown handler
+            this.keydownHandler = (e) => {
+              if (this.gameOver) return;
+
+              const key = e.key;
+              const keyUpper = key.toUpperCase();
+
+              console.log(
+                "Physical key pressed:",
+                key,
+                "Code:",
+                e.code,
+                "Processed as:",
+                keyUpper
+              );
+
+              // Handle letters (A-Z only)
+              if (keyUpper.length === 1 && keyUpper >= "A" && keyUpper <= "Z") {
+                e.preventDefault();
+                this.handleKeyClick(keyUpper);
+              }
+              // Handle Enter key
+              else if (key === "Enter") {
+                e.preventDefault();
+                this.handleKeyClick("ENTER");
+              }
+              // Handle Backspace/Delete keys
+              else if (key === "Backspace" || key === "Delete") {
+                e.preventDefault();
+                this.handleKeyClick("DELETE");
+              }
+            };
+
+            document.addEventListener("keydown", this.keydownHandler);
+
+            const newGameBtn = document.getElementById("newGameBtn");
+            if (newGameBtn) {
+              newGameBtn.addEventListener("click", () => {
+                this.initializeGame();
+                const attemptsEl = document.getElementById("attempts");
+                if (attemptsEl) attemptsEl.textContent = "0/6";
+              });
+            }
+
+            const hintBtn = document.getElementById("hintBtn");
+            if (hintBtn) {
+              hintBtn.addEventListener("click", () => {
+                this.showHint();
+              });
+            }
+          }
+
+          handleKeyClick(key) {
+            if (this.gameOver) return;
+
+            // Clean the key input - remove any extra characters
+            key = key.toString().trim().toUpperCase();
+
+            // Debug log to see what key is being clicked
+            console.log("Key clicked:", key, "Length:", key.length);
+
+            // Handle letter input
+            if (
+              key.length === 1 &&
+              key >= "A" &&
+              key <= "Z" &&
+              this.currentGuess.length < 5
+            ) {
+              this.currentGuess += key;
+              this.updateDisplay();
+              console.log(
+                "Added letter:",
+                key,
+                "Current guess:",
+                this.currentGuess
+              );
+            }
+            // Handle delete/backspace
+            else if (
+              (key === "DELETE" || key === "BACKSPACE" || key === "⌫") &&
+              this.currentGuess.length > 0
+            ) {
+              this.currentGuess = this.currentGuess.slice(0, -1);
+              this.updateDisplay();
+              console.log("Deleted letter, Current guess:", this.currentGuess);
+            }
+            // Handle enter
+            else if (key === "ENTER" && this.currentGuess.length === 5) {
+              this.submitGuess();
+            }
+            // Log unhandled keys for debugging
+            else {
+              console.log(
+                "Key not handled:",
+                key,
+                "Current guess length:",
+                this.currentGuess.length
+              );
+              // Prevent any unwanted character addition
+              return;
+            }
+          }
+
+          updateDisplay() {
+            const row = document.getElementById(`row-${this.currentRow}`);
+            if (!row) return;
+            const boxes = row.querySelectorAll(".letter-box");
+
+            boxes.forEach((box, index) => {
+              if (index < this.currentGuess.length) {
+                box.textContent = this.currentGuess[index];
+                box.classList.add("filled");
+              } else {
+                box.textContent = "";
+                box.classList.remove("filled");
+              }
+            });
+          }
+
+          submitGuess() {
+            if (this.currentGuess.length !== 5) {
+              this.showMessage("Word must be 5 letters long!", "error");
+              return;
+            }
+
+            this.evaluateGuess();
+
+            if (this.currentGuess === this.currentWord) {
+              this.gameWon();
+            } else if (this.currentRow >= 5) {
+              this.gameLost();
+            } else {
+              this.currentRow++;
+              this.currentGuess = "";
+            }
+
+            const attemptsEl = document.getElementById("attempts");
+            if (attemptsEl) {
+              attemptsEl.textContent = `${
+                this.currentRow + (this.gameOver ? 0 : 1)
+              }/6`;
+            }
+          }
+
+          evaluateGuess() {
+            const row = document.getElementById(`row-${this.currentRow}`);
+            if (!row) return;
+            const boxes = row.querySelectorAll(".letter-box");
+            const wordLetters = this.currentWord.split("");
+            const guessLetters = this.currentGuess.split("");
+
+            const letterCount = {};
+            wordLetters.forEach((letter) => {
+              letterCount[letter] = (letterCount[letter] || 0) + 1;
+            });
+
+            const results = new Array(5).fill("absent");
+
+            guessLetters.forEach((letter, index) => {
+              if (letter === wordLetters[index]) {
+                results[index] = "correct";
+                letterCount[letter]--;
+                this.guessedLetters[letter] = "correct";
+              }
+            });
+
+            guessLetters.forEach((letter, index) => {
+              if (results[index] === "absent" && letterCount[letter] > 0) {
+                results[index] = "present";
+                letterCount[letter]--;
+                if (this.guessedLetters[letter] !== "correct") {
+                  this.guessedLetters[letter] = "present";
+                }
+              } else if (results[index] === "absent") {
+                if (!this.guessedLetters[letter]) {
+                  this.guessedLetters[letter] = "absent";
+                }
+              }
+            });
+
+            boxes.forEach((box, index) => {
+              setTimeout(() => {
+                box.classList.add(results[index]);
+                if (results[index] === "correct") {
+                  box.classList.add("bounce");
+                }
+              }, index * 100);
+            });
+
+            setTimeout(() => {
+              this.updateKeyboard();
+            }, 500);
+          }
+
+          updateKeyboard() {
+            Object.keys(this.guessedLetters).forEach((letter) => {
+              const key = document.getElementById(`key-${letter}`);
+              if (key && !key.classList.contains("correct")) {
+                key.classList.remove("present", "absent");
+                key.classList.add(this.guessedLetters[letter]);
+              }
+            });
+          }
+
+          gameWon() {
+            this.gameOver = true;
+            this.stats.wins++;
+            this.stats.gamesPlayed++;
+            this.stats.currentStreak++;
+            this.stats.maxStreak = Math.max(
+              this.stats.maxStreak,
+              this.stats.currentStreak
+            );
+
+            setTimeout(() => {
+              this.showMessage(
+                `🎉 Congratulations! You found "${this.currentWord}"!`,
+                "success"
+              );
+            }, 600);
+
+            this.updateStats();
+            this.saveStats();
+          }
+
+          gameLost() {
+            this.gameOver = true;
+            this.stats.gamesPlayed++;
+            this.stats.currentStreak = 0;
+
+            setTimeout(() => {
+              this.showMessage(
+                `😔 Game Over! The word was "${this.currentWord}"`,
+                "error"
+              );
+              const row = document.getElementById(`row-${this.currentRow}`);
+              if (row) row.classList.add("shake");
+            }, 600);
+
+            this.updateStats();
+            this.saveStats();
+          }
+
+          showMessage(text, type) {
+            const message = document.getElementById("message");
+            if (!message) return;
+            message.textContent = text;
+            message.className = `message show ${type}`;
+
+            setTimeout(() => {
+              message.classList.remove("show");
+            }, 3000);
+          }
+
+          hideMessage() {
+            const message = document.getElementById("message");
+            if (message) message.classList.remove("show");
+          }
+
+          showHint() {
+            const vowels = ["A", "E", "I", "O", "U"];
+            const wordVowels = this.currentWord
+              .split("")
+              .filter((letter) => vowels.includes(letter));
+            const uniqueVowels = [...new Set(wordVowels)];
+
+            if (uniqueVowels.length > 0) {
+              this.showMessage(
+                `💡 Hint: This word contains the vowel(s): ${uniqueVowels.join(
+                  ", "
+                )}`,
+                "warning"
+              );
+            } else {
+              this.showMessage(
+                `💡 Hint: This word contains no vowels!`,
+                "warning"
+              );
+            }
+          }
+
+          updateStats() {
+            const gamesPlayedEl = document.getElementById("gamesPlayed");
+            const winPercentageEl = document.getElementById("winPercentage");
+            const currentStreakEl = document.getElementById("currentStreak");
+
+            if (gamesPlayedEl)
+              gamesPlayedEl.textContent = this.stats.gamesPlayed;
+
+            const winPercentage =
+              this.stats.gamesPlayed > 0
+                ? Math.round((this.stats.wins / this.stats.gamesPlayed) * 100)
+                : 0;
+            if (winPercentageEl)
+              winPercentageEl.textContent = `${winPercentage}%`;
+
+            if (currentStreakEl)
+              currentStreakEl.textContent = this.stats.currentStreak;
+          }
+
+          saveStats() {
+            localStorage.setItem("wordleStats", JSON.stringify(this.stats));
+          }
+        }
+
+        // Initialize the game when page loads
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => {
+            new WordleGame();
+          });
+        } else {
+          new WordleGame();
+        }
+      })();
+    </script>
+  </body>
+</html>

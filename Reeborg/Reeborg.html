@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reeborg's Hurdle Challenge</title>
+    <link rel="stylesheet" href="../shared/game-shell.css" />
+    <link rel="stylesheet" href="../shared/pro-ui.css" />
+    <style>
+      /* Base styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #e0f7fa, #bbdefb, #e3f2fd);
+        background-attachment: fixed;
+        min-height: 100vh;
+        padding: 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" d="M10,10 L90,90 M90,10 L10,90"/></svg>');
+        opacity: 0.3;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .container {
+        max-width: 1300px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 40px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+      }
+
+      header {
+        background: linear-gradient(90deg, #1976d2, #2196f3);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-bottom: 5px solid #0d47a1;
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.2)"/><circle cx="25" cy="25" r="2" fill="rgba(255,255,255,0.2)"/><circle cx="40" cy="40" r="2" fill="rgba(255,255,255,0.2)"/></svg>');
+        opacity: 0.4;
+        z-index: 0;
+      }
+
+      h1 {
+        font-size: 2.5em;
+        margin-bottom: 5px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 1;
+      }
+
+      .subtitle {
+        font-size: 1.2em;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      .main-content {
+        display: flex;
+        flex: 1;
+        padding: 20px;
+        gap: 20px;
+      }
+
+      /* Blocks panel styles */
+      .blocks-panel {
+        background-color: #f5f9ff;
+        border-radius: 10px;
+        padding: 15px;
+        width: 300px;
+        border: 2px solid #bbdefb;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .blocks-panel h2 {
+        color: #0d47a1;
+        margin-bottom: 15px;
+        text-align: center;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #bbdefb;
+      }
+
+      .blocks-category {
+        margin-bottom: 20px;
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #e1f5fe;
+      }
+
+      .blocks-category h3 {
+        color: #0d47a1;
+        margin-bottom: 10px;
+        font-size: 1em;
+        background: #e3f2fd;
+        padding: 8px;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .block {
+        margin: 8px 0;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: grab;
+        font-weight: bold;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+      }
+
+      .block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .block.dragging {
+        opacity: 0.6;
+        transform: scale(0.95);
+      }
+
+      .block.command {
+        background: linear-gradient(to right, #29b6f6, #4fc3f7);
+        color: white;
+        border-left: 8px solid #0288d1;
+      }
+
+      .block.loop {
+        background: linear-gradient(to right, #26a69a, #4db6ac);
+        color: white;
+        border-left: 8px solid #00796b;
+      }
+
+      .block.condition {
+        background: linear-gradient(to right, #ffa726, #ffb74d);
+        color: white;
+        border-left: 8px solid #ef6c00;
+      }
+
+      /* Workspace styles */
+      .workspace {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .code-area {
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        flex: 1;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border: 2px dashed #bbdefb;
+      }
+
+      .code-area h2 {
+        color: #0d47a1;
+        margin-bottom: 15px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .code-area h2::before,
+      .code-area h2::after {
+        content: "{ }";
+        font-family: monospace;
+        margin: 0 10px;
+        color: #2196f3;
+      }
+
+      .drop-zone {
+        min-height: 200px;
+        border: 2px dashed #bbdefb;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #f8fdff;
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow-y: auto;
+        max-height: 400px;
+      }
+
+      .drop-zone.highlight {
+        border-color: #2196f3;
+        background-color: #e3f2fd;
+        box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
+      }
+
+      .drop-zone .block {
+        margin: 5px 0;
+        cursor: move;
+      }
+
+      .workspace-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .block-label {
+        pointer-events: none;
+      }
+
+      .remove-block-btn {
+        border: none;
+        background: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: bold;
+        min-width: 24px;
+        padding: 0;
+        box-shadow: none;
+      }
+
+      .remove-block-btn:hover {
+        background: rgba(0, 0, 0, 0.35);
+        transform: none;
+      }
+
+      .empty-message {
+        text-align: center;
+        color: #90a4ae;
+        margin: 20px 0;
+        font-style: italic;
+      }
+
+      /* World container styles */
+      .world-container {
+        flex: 1;
+        background: #f5f9ff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border: 2px solid #bbdefb;
+        display: flex;
+        flex-direction: column;
+        min-width: 400px;
+      }
+
+      .world-container h2 {
+        color: #0d47a1;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .world {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        background: #e8f5ff;
+        border-radius: 8px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(8, 50px);
+        grid-template-rows: repeat(8, 50px);
+        gap: 2px;
+        border: 3px solid #1976d2;
+        background-color: #64b5f6;
+        position: relative;
+      }
+
+      .grid-cell {
+        width: 50px;
+        height: 50px;
+        background-color: #e3f2fd;
+        position: relative;
+        transition: all 0.3s;
+      }
+
+      .path {
+        background-color: #bbdefb;
+      }
+
+      .robot {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background-color: #d32f2f;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+        z-index: 5;
+        transition: all 0.5s ease-out;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        margin: 5px;
+      }
+
+      .robot::after {
+        content: "▶";
+        display: block;
+        transform-origin: center;
+        transition: transform 0.5s;
+      }
+
+      .robot.facing-right::after {
+        transform: rotate(0deg);
+      }
+
+      .robot.facing-down::after {
+        transform: rotate(90deg);
+      }
+
+      .robot.facing-left::after {
+        transform: rotate(180deg);
+      }
+
+      .robot.facing-up::after {
+        transform: rotate(270deg);
+      }
+
+      .hurdle {
+        position: absolute;
+        width: 40px;
+        height: 10px;
+        background: linear-gradient(to bottom, #f57f17, #ffb300);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 2px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .goal {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #43a047, #66bb6a);
+        border: 2px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: pulse 2s infinite;
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+        }
+      }
+
+      /* Controls styles */
+      .controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.2s;
+        min-width: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      button.run {
+        background: linear-gradient(to right, #43a047, #66bb6a);
+        color: white;
+        border-bottom: 4px solid #2e7d32;
+      }
+
+      button.run:hover {
+        background: linear-gradient(to right, #388e3c, #4caf50);
+      }
+
+      button.reset {
+        background: linear-gradient(to right, #ef5350, #f44336);
+        color: white;
+        border-bottom: 4px solid #c62828;
+      }
+
+      button.reset:hover {
+        background: linear-gradient(to right, #e53935, #ef5350);
+      }
+
+      button.next-level {
+        background: linear-gradient(to right, #7b1fa2, #9c27b0);
+        color: white;
+        border-bottom: 4px solid #4a148c;
+      }
+
+      button.next-level:hover {
+        background: linear-gradient(to right, #6a1b9a, #8e24aa);
+      }
+
+      /* Instructions styles */
+      .instructions {
+        padding: 20px;
+        background: linear-gradient(to right, #e3f2fd, #bbdefb);
+        margin-top: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .instructions h2 {
+        color: #0d47a1;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .instructions p {
+        margin-bottom: 10px;
+        line-height: 1.5;
+      }
+
+      .instructions ol {
+        padding-left: 30px;
+        margin: 15px 0;
+      }
+
+      .instructions li {
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+
+      /* Footer styles */
+      footer {
+        text-align: center;
+        padding: 15px;
+        color: #1976d2;
+        font-size: 0.9em;
+        border-top: 1px solid #bbdefb;
+        background-color: rgba(255, 255, 255, 0.5);
+      }
+
+      /* Level indicator */
+      .level-indicator {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        color: #0d47a1;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      /* Message overlay */
+      .message-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .message-overlay.show {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .message-box {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 400px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transform: translateY(-20px);
+        transition: transform 0.3s;
+      }
+
+      .message-overlay.show .message-box {
+        transform: translateY(0);
+      }
+
+      .message-box h3 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+        color: #0d47a1;
+      }
+
+      .message-box p {
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+
+      /* Responsive styles */
+      @media (max-width: 1100px) {
+        .main-content {
+          flex-direction: column;
+        }
+
+        .blocks-panel {
+          width: 100%;
+          max-height: none;
+        }
+
+        .world-container {
+          min-width: 0;
+        }
+
+        .grid {
+          grid-template-columns: repeat(8, 40px);
+          grid-template-rows: repeat(8, 40px);
+        }
+
+        .grid-cell {
+          width: 40px;
+          height: 40px;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .grid {
+          grid-template-columns: repeat(8, 30px);
+          grid-template-rows: repeat(8, 30px);
+        }
+
+        .grid-cell {
+          width: 30px;
+          height: 30px;
+        }
+
+        .robot {
+          width: 25px;
+          height: 25px;
+          font-size: 14px;
+        }
+
+        .hurdle {
+          width: 25px;
+          height: 6px;
+        }
+
+        .goal {
+          width: 25px;
+          height: 25px;
+        }
+
+        .controls {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body data-game-name="Reeborg Challenge">
+    <div class="container">
+      <header>
+        <h1>Reeborg's Hurdle Challenge</h1>
+        <p class="subtitle">
+          Help Reeborg reach the goal by programming it to navigate through
+          hurdles!
+        </p>
+      </header>
+
+      <div class="main-content">
+        <div class="blocks-panel">
+          <h2>Code Blocks</h2>
+
+          <div class="blocks-category">
+            <h3>Basic Commands</h3>
+            <div class="block command" draggable="true" data-action="move">
+              Move Forward
+            </div>
+            <div class="block command" draggable="true" data-action="jump">
+              Jump Hurdle
+            </div>
+            <div class="block command" draggable="true" data-action="turn-left">
+              Turn Left
+            </div>
+            <div
+              class="block command"
+              draggable="true"
+              data-action="turn-right"
+            >
+              Turn Right
+            </div>
+          </div>
+
+          <div class="blocks-category">
+            <h3>Loops</h3>
+            <div class="block loop" draggable="true" data-action="repeat-2">
+              Repeat 2 times
+            </div>
+            <div class="block loop" draggable="true" data-action="repeat-3">
+              Repeat 3 times
+            </div>
+            <div class="block loop" draggable="true" data-action="repeat-4">
+              Repeat 4 times
+            </div>
+          </div>
+
+          <div class="blocks-category">
+            <h3>Conditions</h3>
+            <div
+              class="block condition"
+              draggable="true"
+              data-action="if-path-clear"
+            >
+              If path clear
+            </div>
+            <div
+              class="block condition"
+              draggable="true"
+              data-action="if-hurdle-ahead"
+            >
+              If hurdle ahead
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="code-area">
+            <h2>Your Code</h2>
+            <div id="dropZone" class="drop-zone">
+              <div class="empty-message">
+                Drag blocks here to build your program
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="runButton" class="run">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Run Program
+            </button>
+            <button id="clearCodeButton" class="reset">Clear Code</button>
+            <button id="resetButton" class="reset">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M3 2v6h6"></path>
+                <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+                <path d="M21 22v-6h-6"></path>
+                <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+              </svg>
+              Reset
+            </button>
+            <button
+              id="nextLevelButton"
+              class="next-level"
+              style="display: none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+              Next Level
+            </button>
+          </div>
+        </div>
+
+        <div class="world-container">
+          <h2>Reeborg's World</h2>
+          <div class="level-indicator">
+            Level: <span id="levelNumber">1</span>
+          </div>
+          <div class="world">
+            <div id="grid" class="grid">
+              <!-- Grid cells will be generated by JavaScript -->
+            </div>
+            <div id="robot" class="robot facing-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <h2>How to Play</h2>
+        <p>
+          Help Reeborg navigate through the hurdles to reach the green goal!
+        </p>
+        <ol>
+          <li>
+            Drag code blocks from the left panel into the "Your Code" area.
+          </li>
+          <li>Arrange blocks in the order you want them to be executed.</li>
+          <li>Click "Run Program" to see Reeborg follow your instructions.</li>
+          <li>If you make a mistake, click "Reset" to try again.</li>
+        </ol>
+        <p>
+          Challenge: use move, jump, turn, repeat and condition blocks to pass
+          hurdles and reach the goal with fewer blocks.
+        </p>
+      </div>
+
+      <div id="messageOverlay" class="message-overlay">
+        <div class="message-box">
+          <h3 id="messageTitle">Success!</h3>
+          <p id="messageContent">You've completed this level!</p>
+          <button id="messageButton" class="run">Continue</button>
+        </div>
+      </div>
+
+      <footer>
+        Created for educational purposes | Reeborg's Hurdle Challenge
+      </footer>
+    </div>
+
+    <script>
+      // Game configuration
+      const levels = [
+        // Level 1: Simple path with one hurdle
+        {
+          grid: [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+          ],
+          hurdles: [{ x: 3, y: 1 }],
+          start: { x: 1, y: 1, direction: "right" },
+          goal: { x: 6, y: 1 },
+        },
+        // Level 2: Path with multiple hurdles
+        {
+          grid: [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+          ],
+          hurdles: [
+            { x: 2, y: 1 },
+            { x: 4, y: 1 },
+          ],
+          start: { x: 1, y: 1, direction: "right" },
+          goal: { x: 6, y: 1 },
+        },
+        // Level 3: L-shaped path with hurdles
+        {
+          grid: [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+          ],
+          hurdles: [
+            { x: 2, y: 1 },
+            { x: 3, y: 3 },
+            { x: 5, y: 3 },
+          ],
+          start: { x: 1, y: 1, direction: "right" },
+          goal: { x: 6, y: 3 },
+        },
+      ];
+
+      // Game state
+      let currentLevel = 0;
+      let robotPosition = { x: 0, y: 0 };
+      let robotDirection = "right";
+      let program = [];
+      let isRunning = false;
+      let dragContext = null;
+
+      // DOM elements
+      const blocks = document.querySelectorAll(".block");
+      const dropZone = document.getElementById("dropZone");
+      const runButton = document.getElementById("runButton");
+      const clearCodeButton = document.getElementById("clearCodeButton");
+      const resetButton = document.getElementById("resetButton");
+      const nextLevelButton = document.getElementById("nextLevelButton");
+      const robot = document.getElementById("robot");
+      const grid = document.getElementById("grid");
+      const levelNumber = document.getElementById("levelNumber");
+      const messageOverlay = document.getElementById("messageOverlay");
+      const messageTitle = document.getElementById("messageTitle");
+      const messageContent = document.getElementById("messageContent");
+      const messageButton = document.getElementById("messageButton");
+
+      // Initialize the game
+      function initializeGame() {
+        loadLevel(currentLevel);
+        setupDragAndDrop();
+        setupEventListeners();
+      }
+
+      // Load a specific level
+      function loadLevel(levelIndex) {
+        const level = levels[levelIndex];
+
+        // Update level indicator
+        levelNumber.textContent = levelIndex + 1;
+
+        // Generate grid
+        generateGrid(level.grid);
+
+        // Add hurdles
+        level.hurdles.forEach((hurdle) => {
+          const hurdleElement = document.createElement("div");
+          hurdleElement.className = "hurdle";
+          const cell = grid.children[hurdle.y * 8 + hurdle.x];
+          cell.appendChild(hurdleElement);
+        });
+
+        // Set goal
+        const goalElement = document.createElement("div");
+        goalElement.className = "goal";
+        goalElement.textContent = "🚩";
+        const goalCell = grid.children[level.goal.y * 8 + level.goal.x];
+        goalCell.appendChild(goalElement);
+
+        // Position robot
+        robotPosition = { x: level.start.x, y: level.start.y };
+        robotDirection = level.start.direction;
+        updateRobotPosition();
+
+        // Clear program
+        program = [];
+        updateDropZone();
+
+        // Hide next level button
+        nextLevelButton.style.display = "none";
+      }
+
+      // Generate grid based on level configuration
+      function generateGrid(gridData) {
+        grid.innerHTML = "";
+
+        for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+            const cell = document.createElement("div");
+            cell.className = "grid-cell";
+            if (gridData[y][x] === 1) {
+              cell.classList.add("path");
+            }
+            grid.appendChild(cell);
+          }
+        }
+      }
+
+      // Set up drag and drop functionality
+      function setupDragAndDrop() {
+        // Toolbox blocks
+        blocks.forEach((block) => {
+          block.draggable = true;
+          block.addEventListener("dragstart", toolboxDragStart);
+          block.addEventListener("dragend", dragEnd);
+        });
+
+        dropZone.addEventListener("dragover", dragOver);
+        dropZone.addEventListener("dragenter", dragEnter);
+        dropZone.addEventListener("dragleave", dragLeave);
+        dropZone.addEventListener("drop", drop);
+      }
+
+      // Set up other event listeners
+      function setupEventListeners() {
+        runButton.addEventListener("click", runProgram);
+        clearCodeButton.addEventListener("click", clearProgram);
+        resetButton.addEventListener("click", resetLevel);
+        nextLevelButton.addEventListener("click", loadNextLevel);
+        messageButton.addEventListener("click", closeMessage);
+      }
+
+      // Drag and drop handlers
+      function toolboxDragStart(e) {
+        if (isRunning) return;
+
+        this.classList.add("dragging");
+        dragContext = {
+          source: "toolbox",
+          action: this.dataset.action,
+          index: -1,
+        };
+        e.dataTransfer.setData("text/plain", this.dataset.action);
+        e.dataTransfer.effectAllowed = "copy";
+      }
+
+      function workspaceDragStart(e) {
+        if (isRunning) return;
+        this.classList.add("dragging");
+        dragContext = {
+          source: "workspace",
+          action: this.dataset.action,
+          index: parseInt(this.dataset.index, 10),
+        };
+        e.dataTransfer.setData("text/plain", this.dataset.action);
+        e.dataTransfer.effectAllowed = "move";
+      }
+
+      function dragEnd() {
+        this.classList.remove("dragging");
+        dragContext = null;
+        dropZone.classList.remove("highlight");
+      }
+
+      function dragOver(e) {
+        if (isRunning) return;
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+      }
+
+      function dragEnter(e) {
+        if (isRunning) return;
+
+        e.preventDefault();
+        this.classList.add("highlight");
+      }
+
+      function dragLeave() {
+        this.classList.remove("highlight");
+      }
+
+      function drop(e) {
+        if (isRunning) return;
+
+        e.preventDefault();
+        this.classList.remove("highlight");
+
+        const action = e.dataTransfer.getData("text/plain");
+        if (!action || !dragContext) return;
+
+        const insertAt = getDropInsertIndex(e);
+
+        if (dragContext.source === "toolbox") {
+          program.splice(insertAt, 0, action);
+        } else if (dragContext.source === "workspace") {
+          const fromIndex = dragContext.index;
+          if (Number.isNaN(fromIndex) || fromIndex < 0 || fromIndex >= program.length) {
+            return;
+          }
+          const moved = program.splice(fromIndex, 1)[0];
+          let targetIndex = insertAt;
+          if (fromIndex < targetIndex) targetIndex--;
+          program.splice(targetIndex, 0, moved);
+        }
+
+        updateDropZone();
+      }
+
+      function getDropInsertIndex(e) {
+        const workspaceBlocks = Array.from(
+          dropZone.querySelectorAll(".workspace-block")
+        );
+
+        for (let i = 0; i < workspaceBlocks.length; i++) {
+          const rect = workspaceBlocks[i].getBoundingClientRect();
+          if (e.clientY < rect.top + rect.height / 2) {
+            return i;
+          }
+        }
+
+        return workspaceBlocks.length;
+      }
+
+      // Add a block to the program
+      function addBlockToProgram(action) {
+        program.push(action);
+      }
+
+      // Update the drop zone display
+      function updateDropZone() {
+        dropZone.innerHTML = "";
+
+        if (program.length === 0) {
+          const emptyMessage = document.createElement("div");
+          emptyMessage.className = "empty-message";
+          emptyMessage.textContent = "Drag blocks here to build your program";
+          dropZone.appendChild(emptyMessage);
+          return;
+        }
+
+        program.forEach((action, index) => {
+          const block = document.createElement("div");
+
+          // Set appropriate class based on action type
+          if (action.startsWith("repeat")) {
+            block.className = "block loop";
+          } else if (action.startsWith("if")) {
+            block.className = "block condition";
+          } else {
+            block.className = "block command";
+          }
+
+          // Set text based on action
+          switch (action) {
+            case "move":
+              block.textContent = "Move Forward";
+              break;
+            case "jump":
+              block.textContent = "Jump Hurdle";
+              break;
+            case "turn-left":
+              block.textContent = "Turn Left";
+              break;
+            case "turn-right":
+              block.textContent = "Turn Right";
+              break;
+            case "repeat-2":
+              block.textContent = "Repeat 2 times";
+              break;
+            case "repeat-3":
+              block.textContent = "Repeat 3 times";
+              break;
+            case "repeat-4":
+              block.textContent = "Repeat 4 times";
+              break;
+            case "if-path-clear":
+              block.textContent = "If path clear";
+              break;
+            case "if-hurdle-ahead":
+              block.textContent = "If hurdle ahead";
+              break;
+            default:
+              block.textContent = action;
+          }
+
+          const labelText = block.textContent;
+          block.innerHTML = `
+            <span class="block-label">${labelText}</span>
+            <button type="button" class="remove-block-btn" data-index="${index}" title="Remove block">x</button>
+          `;
+
+          block.classList.add("workspace-block");
+          block.dataset.index = String(index);
+          block.dataset.action = action;
+          block.draggable = true;
+          block.addEventListener("dragstart", workspaceDragStart);
+          block.addEventListener("dragend", dragEnd);
+
+          // Add double-click to remove
+          block.addEventListener("dblclick", function () {
+            if (!isRunning) {
+              program.splice(parseInt(this.dataset.index, 10), 1);
+              updateDropZone();
+            }
+          });
+
+          const removeBtn = block.querySelector(".remove-block-btn");
+          removeBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (!isRunning) {
+              const removeIndex = parseInt(removeBtn.dataset.index, 10);
+              program.splice(removeIndex, 1);
+              updateDropZone();
+            }
+          });
+
+          dropZone.appendChild(block);
+        });
+      }
+
+      // Run the program
+      function runProgram() {
+        if (isRunning || program.length === 0) return;
+
+        resetRobotToStart();
+        isRunning = true;
+        runButton.disabled = true;
+        clearCodeButton.disabled = true;
+        resetButton.disabled = true;
+
+        executeProgram()
+          .then(() => {
+            isRunning = false;
+            runButton.disabled = false;
+            clearCodeButton.disabled = false;
+            resetButton.disabled = false;
+
+            // Check if goal reached
+            const level = levels[currentLevel];
+            if (
+              robotPosition.x === level.goal.x &&
+              robotPosition.y === level.goal.y
+            ) {
+              showMessage(
+                "Success!",
+                "You've reached the goal!",
+                "Next Level",
+                () => {
+                  if (currentLevel < levels.length - 1) {
+                    nextLevelButton.style.display = "flex";
+                  }
+                }
+              );
+            } else {
+              showMessage(
+                "Program finished",
+                "Reeborg did not reach the goal yet. Adjust your blocks and run again.",
+                "Continue"
+              );
+            }
+          })
+          .catch((error) => {
+            showMessage("Oops!", error, "Try Again", () => {
+              isRunning = false;
+              runButton.disabled = false;
+              clearCodeButton.disabled = false;
+              resetButton.disabled = false;
+              resetRobotToStart();
+            });
+          });
+      }
+
+      // Execute the program step by step
+      async function executeProgram() {
+        for (let i = 0; i < program.length; ) {
+          const action = program[i];
+
+          if (action.startsWith("repeat")) {
+            if (i + 1 >= program.length) {
+              throw "A repeat block needs one command after it.";
+            }
+            const count = parseInt(action.split("-")[1], 10);
+            const repeatedAction = program[i + 1];
+            for (let j = 0; j < count; j++) {
+              await executeAction(repeatedAction);
+              if (isAtGoal()) return;
+            }
+            i += 2;
+          } else if (action === "if-path-clear" || action === "if-hurdle-ahead") {
+            if (i + 1 >= program.length) {
+              throw "An if block needs one command after it.";
+            }
+            const conditionalAction = program[i + 1];
+            const conditionMet =
+              action === "if-path-clear" ? isPathClearAhead() : isHurdleAhead();
+            if (conditionMet) {
+              await executeAction(conditionalAction);
+              if (isAtGoal()) return;
+            }
+            i += 2;
+          } else {
+            await executeAction(action);
+            if (isAtGoal()) return;
+            i += 1;
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 180));
+        }
+      }
+
+      // Execute a single action
+      async function executeAction(action) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            try {
+              switch (action) {
+                case "move":
+                  moveForward();
+                  break;
+                case "jump":
+                  jumpHurdle();
+                  break;
+                case "turn-left":
+                  turnLeft();
+                  break;
+                case "turn-right":
+                  turnRight();
+                  break;
+              }
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          }, 500);
+        });
+      }
+
+      // Robot movement functions
+      function moveForward() {
+        const next = peekForwardPosition(1);
+        if (!isInsideGrid(next)) {
+          throw "Robot hit the wall!";
+        }
+        if (!isPathCell(next)) {
+          throw "Robot can only move on the path!";
+        }
+        if (isHurdleAt(next)) {
+          throw "Robot hit a hurdle!";
+        }
+        robotPosition.x = next.x;
+        robotPosition.y = next.y;
+        updateRobotPosition();
+      }
+
+      function jumpHurdle() {
+        const ahead = peekForwardPosition(1);
+        const landing = peekForwardPosition(2);
+
+        if (!isInsideGrid(ahead) || !isInsideGrid(landing)) {
+          throw "Cannot jump outside the world!";
+        }
+        if (!isHurdleAt(ahead)) {
+          throw "Jump only works when a hurdle is directly ahead.";
+        }
+        if (!isPathCell(landing)) {
+          throw "Cannot land there. Landing cell must be on the path.";
+        }
+        if (isHurdleAt(landing)) {
+          throw "Cannot land on another hurdle.";
+        }
+
+        robotPosition.x = landing.x;
+        robotPosition.y = landing.y;
+        updateRobotPosition();
+      }
+
+      function peekForwardPosition(stepCount = 1) {
+        let newX = robotPosition.x;
+        let newY = robotPosition.y;
+
+        switch (robotDirection) {
+          case "right":
+            newX += stepCount;
+            break;
+          case "down":
+            newY += stepCount;
+            break;
+          case "left":
+            newX -= stepCount;
+            break;
+          case "up":
+            newY -= stepCount;
+            break;
+        }
+
+        return { x: newX, y: newY };
+      }
+
+      function isPathClearAhead() {
+        const next = peekForwardPosition();
+        if (!isInsideGrid(next)) {
+          return false;
+        }
+        return isPathCell(next) && !isHurdleAt(next);
+      }
+
+      function isHurdleAhead() {
+        const next = peekForwardPosition();
+        return isInsideGrid(next) && isHurdleAt(next);
+      }
+
+      function isInsideGrid(position) {
+        return position.x >= 0 && position.x < 8 && position.y >= 0 && position.y < 8;
+      }
+
+      function isPathCell(position) {
+        const level = levels[currentLevel];
+        return level.grid[position.y][position.x] === 1;
+      }
+
+      function isHurdleAt(position) {
+        const level = levels[currentLevel];
+        return level.hurdles.some((h) => h.x === position.x && h.y === position.y);
+      }
+
+      function isAtGoal() {
+        const level = levels[currentLevel];
+        return robotPosition.x === level.goal.x && robotPosition.y === level.goal.y;
+      }
+
+      function turnLeft() {
+        switch (robotDirection) {
+          case "right":
+            robotDirection = "up";
+            break;
+          case "down":
+            robotDirection = "right";
+            break;
+          case "left":
+            robotDirection = "down";
+            break;
+          case "up":
+            robotDirection = "left";
+            break;
+        }
+        updateRobotPosition();
+      }
+
+      function turnRight() {
+        switch (robotDirection) {
+          case "right":
+            robotDirection = "down";
+            break;
+          case "down":
+            robotDirection = "left";
+            break;
+          case "left":
+            robotDirection = "up";
+            break;
+          case "up":
+            robotDirection = "right";
+            break;
+        }
+        updateRobotPosition();
+      }
+
+      // Update the robot's position and direction visually
+      function updateRobotPosition() {
+        const firstCell = grid.children[0];
+        const cellSize = parseInt(getComputedStyle(firstCell).width);
+        const gap = 2; // Grid gap
+
+        const x = robotPosition.x * (cellSize + gap);
+        const y = robotPosition.y * (cellSize + gap);
+
+        robot.style.left = x + "px";
+        robot.style.top = y + "px";
+
+        // Update direction
+        robot.className = "robot";
+        robot.classList.add(`facing-${robotDirection}`);
+      }
+
+      // Reset the current level
+      function resetLevel() {
+        loadLevel(currentLevel);
+      }
+
+      function clearProgram() {
+        if (isRunning) return;
+        program = [];
+        updateDropZone();
+      }
+
+      function resetRobotToStart() {
+        const level = levels[currentLevel];
+        robotPosition = { x: level.start.x, y: level.start.y };
+        robotDirection = level.start.direction;
+        updateRobotPosition();
+      }
+
+      // Load the next level
+      function loadNextLevel() {
+        if (currentLevel < levels.length - 1) {
+          currentLevel++;
+          loadLevel(currentLevel);
+        }
+      }
+
+      // Show a message overlay
+      function showMessage(title, content, buttonText, callback) {
+        messageTitle.textContent = title;
+        messageContent.textContent = content;
+        messageButton.textContent = buttonText;
+        messageOverlay.classList.add("show");
+
+        messageButton.onclick = function () {
+          closeMessage();
+          if (callback) callback();
+        };
+      }
+
+      // Close the message overlay
+      function closeMessage() {
+        messageOverlay.classList.remove("show");
+      }
+
+      // Initialize the game when the page loads
+      document.addEventListener("DOMContentLoaded", initializeGame);
+    </script>
+    <script src="../shared/game-shell.js"></script>
+  </body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game Showcase</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f172a, #1e293b 55%, #111827);
+        color: #e5e7eb;
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 20px 40px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 2.1rem;
+      }
+      .sub {
+        margin-top: 10px;
+        color: #cbd5e1;
+      }
+      .tips {
+        margin-top: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(148, 163, 184, 0.14);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        color: #dbeafe;
+      }
+      .grid {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(148, 163, 184, 0.23);
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .title {
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+      .desc {
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 0.95rem;
+        min-height: 40px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      a.btn {
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 9px 12px;
+      }
+      .play {
+        background: #2563eb;
+        color: #fff;
+      }
+      .play:hover {
+        background: #1d4ed8;
+      }
+      .folder {
+        background: rgba(255, 255, 255, 0.11);
+        color: #e2e8f0;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Games</h1>
+      <p class="sub">
+        Unified launcher for all game demos in this project.
+      </p>
+      <div class="tips">
+        Tip: Open this page with a local server for best compatibility (see
+        `README.md`).
+      </div>
+
+      <section class="grid">
+        <article class="card">
+          <div class="title">Snake Classic</div>
+          <p class="desc">Retro snake with keyboard/touch controls.</p>
+          <div class="actions">
+            <a class="btn play" href="./Snake%20Game/snake-classic.html">Play</a>
+            <a class="btn folder" href="./Snake%20Game/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Typing Challenge</div>
+          <p class="desc">Speed + accuracy challenge with difficulties.</p>
+          <div class="actions">
+            <a class="btn play" href="./Typing%20Game/typinggame.html">Play</a>
+            <a class="btn folder" href="./Typing%20Game/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Memory Match</div>
+          <p class="desc">Pair matching puzzle with multiple board sizes.</p>
+          <div class="actions">
+            <a class="btn play" href="./Memory%20Game/memorygame.html">Play</a>
+            <a class="btn folder" href="./Memory%20Game/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Hangman</div>
+          <p class="desc">Classic word guessing with visual hangman state.</p>
+          <div class="actions">
+            <a class="btn play" href="./Hangman/hangman.html">Play</a>
+            <a class="btn folder" href="./Hangman/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Wordle Clone</div>
+          <p class="desc">6 tries to guess a hidden 5-letter word.</p>
+          <div class="actions">
+            <a class="btn play" href="./Wordle/wordle.html">Play</a>
+            <a class="btn folder" href="./Wordle/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Pictionary / Charades</div>
+          <p class="desc">Prompt generator for group interview fun.</p>
+          <div class="actions">
+            <a class="btn play" href="./Pictionary/pictionary.html">Play</a>
+            <a class="btn folder" href="./Pictionary/">Folder</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="title">Reeborg Challenge</div>
+          <p class="desc">Block-style logic puzzle with levels.</p>
+          <div class="actions">
+            <a class="btn play" href="./Reeborg/Reeborg.html">Play</a>
+            <a class="btn folder" href="./Reeborg/">Folder</a>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎨 Pictionary & Charades Generator</title>
+    <link rel="stylesheet" href="../shared/game-shell.css" />
+    <link rel="stylesheet" href="../shared/pro-ui.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1 {
+        color: #667eea;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .subtitle {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+      }
+
+      .mode-selector {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      .mode-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        border: 3px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        min-width: 150px;
+      }
+
+      .mode-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .mode-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .difficulty-selector {
+        margin-bottom: 30px;
+      }
+
+      .difficulty-selector label {
+        display: block;
+        color: #667eea;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+      }
+
+      .difficulty-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .diff-btn {
+        padding: 12px 25px;
+        border: 2px solid #ddd;
+        background: white;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .diff-btn.easy {
+        color: #4ade80;
+        border-color: #4ade80;
+      }
+
+      .diff-btn.easy.active,
+      .diff-btn.easy:hover {
+        background: #4ade80;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .diff-btn.medium {
+        color: #fbbf24;
+        border-color: #fbbf24;
+      }
+
+      .diff-btn.medium.active,
+      .diff-btn.medium:hover {
+        background: #fbbf24;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .diff-btn.hard {
+        color: #f87171;
+        border-color: #f87171;
+      }
+
+      .diff-btn.hard.active,
+      .diff-btn.hard:hover {
+        background: #f87171;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .diff-btn.expert {
+        color: #a855f7;
+        border-color: #a855f7;
+      }
+
+      .diff-btn.expert.active,
+      .diff-btn.expert:hover {
+        background: #a855f7;
+        color: white;
+        transform: scale(1.05);
+      }
+
+      .word-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 50px 30px;
+        border-radius: 20px;
+        margin: 30px 0;
+        min-height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+        animation: wordPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+
+      @keyframes wordPop {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .word-display::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+      }
+
+      @keyframes shine {
+        0% {
+          left: -50%;
+        }
+        100% {
+          left: 150%;
+        }
+      }
+
+      .word-text {
+        position: relative;
+        z-index: 1;
+        word-break: break-word;
+        line-height: 1.2;
+      }
+
+      .placeholder {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.5rem;
+      }
+
+      .generate-btn {
+        background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+        color: white;
+        border: none;
+        padding: 20px 50px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px rgba(74, 222, 128, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .generate-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(74, 222, 128, 0.5);
+      }
+
+      .generate-btn:active {
+        transform: translateY(0);
+      }
+
+      .stats {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-around;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        padding: 20px;
+        border-radius: 15px;
+        flex: 1;
+        min-width: 120px;
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        color: #667eea;
+        font-size: 2rem;
+        font-weight: bold;
+      }
+
+      .category-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.3);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-top: 15px;
+        color: white;
+        font-weight: 600;
+      }
+
+      .history {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 2px solid #e5e7eb;
+      }
+
+      .history-title {
+        color: #667eea;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
+      .history-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .history-item {
+        background: #f3f4f6;
+        padding: 8px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 25px;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .word-display {
+          font-size: 2rem;
+          padding: 40px 20px;
+        }
+
+        .generate-btn {
+          padding: 15px 35px;
+          font-size: 1.1rem;
+        }
+
+        .mode-btn {
+          min-width: 130px;
+          padding: 12px 20px;
+        }
+      }
+
+      .emoji-burst {
+        position: fixed;
+        font-size: 2rem;
+        pointer-events: none;
+        animation: burst 1s ease-out forwards;
+      }
+
+      @keyframes burst {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100px) scale(1.5);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body data-game-name="Pictionary / Charades">
+    <div class="container">
+      <h1>🎨 Quick Game Generator</h1>
+      <p class="subtitle">Pictionary & Charades Made Easy!</p>
+
+      <div class="mode-selector">
+        <button class="mode-btn active" data-mode="pictionary">
+          🖼️ Pictionary
+        </button>
+        <button class="mode-btn" data-mode="charades">🎭 Charades</button>
+      </div>
+
+      <div class="difficulty-selector">
+        <label>Choose Difficulty:</label>
+        <div class="difficulty-buttons">
+          <button class="diff-btn easy active" data-difficulty="easy">
+            😊 Easy
+          </button>
+          <button class="diff-btn medium" data-difficulty="medium">
+            🤔 Medium
+          </button>
+          <button class="diff-btn hard" data-difficulty="hard">😰 Hard</button>
+          <button class="diff-btn expert" data-difficulty="expert">
+            🔥 Expert
+          </button>
+        </div>
+      </div>
+
+      <div class="word-display">
+        <div class="word-text placeholder">Click Generate to Start! 🎲</div>
+      </div>
+      <div id="category-container"></div>
+
+      <button class="generate-btn" id="generateBtn">🎲 Generate Word</button>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Words Generated</div>
+          <div class="stat-value" id="wordCount">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Current Streak</div>
+          <div class="stat-value" id="streakCount">0</div>
+        </div>
+      </div>
+
+      <div class="history">
+        <div class="history-title">📜 Recent Words</div>
+        <div class="history-list" id="historyList">
+          <div class="history-item">No history yet</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      class GameGenerator {
+        constructor() {
+          this.words = {
+            pictionary: {
+              easy: [
+                { word: "Cat", category: "Animals" },
+                { word: "House", category: "Objects" },
+                { word: "Sun", category: "Nature" },
+                { word: "Tree", category: "Nature" },
+                { word: "Car", category: "Vehicles" },
+                { word: "Book", category: "Objects" },
+                { word: "Apple", category: "Food" },
+                { word: "Fish", category: "Animals" },
+                { word: "Star", category: "Nature" },
+                { word: "Ball", category: "Objects" },
+                { word: "Cup", category: "Objects" },
+                { word: "Moon", category: "Nature" },
+                { word: "Door", category: "Objects" },
+                { word: "Bird", category: "Animals" },
+                { word: "Chair", category: "Furniture" },
+                { word: "Flower", category: "Nature" },
+                { word: "Heart", category: "Shapes" },
+                { word: "Cloud", category: "Nature" },
+                { word: "Pizza", category: "Food" },
+                { word: "Smile", category: "Emotions" },
+              ],
+              medium: [
+                { word: "Bicycle", category: "Vehicles" },
+                { word: "Rainbow", category: "Nature" },
+                { word: "Butterfly", category: "Animals" },
+                { word: "Mountain", category: "Nature" },
+                { word: "Guitar", category: "Music" },
+                { word: "Elephant", category: "Animals" },
+                { word: "Waterfall", category: "Nature" },
+                { word: "Telescope", category: "Science" },
+                { word: "Pyramid", category: "Landmarks" },
+                { word: "Volcano", category: "Nature" },
+                { word: "Penguin", category: "Animals" },
+                { word: "Lighthouse", category: "Buildings" },
+                { word: "Kangaroo", category: "Animals" },
+                { word: "Cactus", category: "Plants" },
+                { word: "Snowman", category: "Winter" },
+                { word: "Sandwich", category: "Food" },
+                { word: "Mushroom", category: "Nature" },
+                { word: "Compass", category: "Objects" },
+                { word: "Windmill", category: "Buildings" },
+                { word: "Parachute", category: "Objects" },
+              ],
+              hard: [
+                { word: "Rollercoaster", category: "Entertainment" },
+                { word: "Skateboarding", category: "Sports" },
+                { word: "Hieroglyphics", category: "History" },
+                { word: "Microscope", category: "Science" },
+                { word: "Constellation", category: "Space" },
+                { word: "Skyscraper", category: "Buildings" },
+                { word: "Typewriter", category: "Technology" },
+                { word: "Octopus", category: "Animals" },
+                { word: "Chandelier", category: "Objects" },
+                { word: "Avalanche", category: "Nature" },
+                { word: "Helicopter", category: "Vehicles" },
+                { word: "Silhouette", category: "Art" },
+                { word: "Suspension Bridge", category: "Landmarks" },
+                { word: "Hot Air Balloon", category: "Vehicles" },
+                { word: "Tornado", category: "Weather" },
+                { word: "Carousel", category: "Entertainment" },
+                { word: "Orchestra", category: "Music" },
+                { word: "Solar System", category: "Space" },
+                { word: "Shipwreck", category: "History" },
+                { word: "Origami", category: "Art" },
+              ],
+              expert: [
+                { word: "Photosynthesis", category: "Science" },
+                { word: "Abstract Art", category: "Art" },
+                { word: "Time Machine", category: "Sci-Fi" },
+                { word: "Invisible Ink", category: "Mystery" },
+                { word: "Quantum Physics", category: "Science" },
+                { word: "Renaissance", category: "History" },
+                { word: "Hologram", category: "Technology" },
+                { word: "Bioluminescence", category: "Nature" },
+                { word: "Metamorphosis", category: "Biology" },
+                { word: "Northern Lights", category: "Nature" },
+                { word: "Black Hole", category: "Space" },
+                { word: "Evolution", category: "Science" },
+                { word: "Déjà Vu", category: "Psychology" },
+                { word: "Amnesia", category: "Medical" },
+                { word: "Kaleidoscope", category: "Objects" },
+                { word: "Paradox", category: "Philosophy" },
+                { word: "Mirage", category: "Phenomena" },
+                { word: "Cloning", category: "Science" },
+                { word: "Cryptocurrency", category: "Technology" },
+                { word: "Artificial Intelligence", category: "Technology" },
+              ],
+            },
+            charades: {
+              easy: [
+                { word: "Sleeping", category: "Actions" },
+                { word: "Eating", category: "Actions" },
+                { word: "Running", category: "Actions" },
+                { word: "Dancing", category: "Actions" },
+                { word: "Swimming", category: "Actions" },
+                { word: "Jumping", category: "Actions" },
+                { word: "Reading", category: "Actions" },
+                { word: "Singing", category: "Actions" },
+                { word: "Clapping", category: "Actions" },
+                { word: "Walking", category: "Actions" },
+                { word: "Waving", category: "Actions" },
+                { word: "Yawning", category: "Actions" },
+                { word: "Laughing", category: "Actions" },
+                { word: "Crying", category: "Actions" },
+                { word: "Brushing Teeth", category: "Daily Activities" },
+                { word: "Taking a Shower", category: "Daily Activities" },
+                { word: "Driving a Car", category: "Actions" },
+                { word: "Opening a Door", category: "Actions" },
+                { word: "Making a Phone Call", category: "Actions" },
+                { word: "Tying Shoes", category: "Actions" },
+              ],
+              medium: [
+                { word: "Playing Guitar", category: "Music" },
+                { word: "Riding a Bicycle", category: "Sports" },
+                { word: "Building a Snowman", category: "Activities" },
+                { word: "Flying a Kite", category: "Activities" },
+                { word: "Baking a Cake", category: "Cooking" },
+                { word: "Mowing the Lawn", category: "Chores" },
+                { word: "Washing Dishes", category: "Chores" },
+                { word: "Playing Video Games", category: "Entertainment" },
+                { word: "Rock Climbing", category: "Sports" },
+                { word: "Ice Skating", category: "Sports" },
+                { word: "Gardening", category: "Hobbies" },
+                { word: "Painting a Picture", category: "Art" },
+                { word: "Fishing", category: "Activities" },
+                { word: "Bowling", category: "Sports" },
+                { word: "Surfing", category: "Sports" },
+                { word: "Skydiving", category: "Extreme Sports" },
+                { word: "Playing Chess", category: "Games" },
+                { word: "Yoga", category: "Exercise" },
+                { word: "Juggling", category: "Skills" },
+                { word: "Magic Trick", category: "Entertainment" },
+              ],
+              hard: [
+                { word: "Brain Surgery", category: "Medical" },
+                { word: "Space Walking", category: "Space" },
+                { word: "Sword Fighting", category: "Combat" },
+                { word: "Conducting an Orchestra", category: "Music" },
+                { word: "Defusing a Bomb", category: "Action" },
+                { word: "Zombie Apocalypse", category: "Horror" },
+                { word: "Tight Rope Walking", category: "Circus" },
+                { word: "Being a Robot", category: "Sci-Fi" },
+                { word: "Time Traveling", category: "Sci-Fi" },
+                { word: "Mind Reading", category: "Supernatural" },
+                { word: "Fighting a Dragon", category: "Fantasy" },
+                { word: "Ninja Stealth", category: "Action" },
+                { word: "Breakdancing", category: "Dance" },
+                { word: "Mime Performance", category: "Theater" },
+                { word: "Trapeze Artist", category: "Circus" },
+                { word: "Fire Breathing", category: "Circus" },
+                { word: "Escape Artist", category: "Magic" },
+                { word: "Speed Dating", category: "Social" },
+                { word: "Assembling IKEA Furniture", category: "Funny" },
+                { word: "Having a Nightmare", category: "Scenarios" },
+              ],
+              expert: [
+                { word: "Experiencing Vertigo", category: "Medical" },
+                { word: "Parallel Universe Travel", category: "Sci-Fi" },
+                { word: "Being Possessed", category: "Horror" },
+                { word: "Spontaneous Combustion", category: "Phenomena" },
+                { word: "Astral Projection", category: "Spiritual" },
+                { word: "Telekinesis", category: "Supernatural" },
+                { word: "Shapeshifting", category: "Fantasy" },
+                { word: "Having Déjà Vu", category: "Psychological" },
+                { word: "Out of Body Experience", category: "Spiritual" },
+                { word: "Lucid Dreaming", category: "Psychological" },
+                { word: "Invisible Man", category: "Sci-Fi" },
+                { word: "Frozen in Time", category: "Sci-Fi" },
+                { word: "Multiple Personalities", category: "Psychological" },
+                { word: "Being a Marionette", category: "Abstract" },
+                { word: "Quantum Entanglement", category: "Physics" },
+                { word: "Existential Crisis", category: "Philosophy" },
+                { word: "Sleep Paralysis", category: "Medical" },
+                { word: "Stuck in a Loop", category: "Sci-Fi" },
+                { word: "Becoming a Statue", category: "Mythology" },
+                { word: "Reality Glitch", category: "Sci-Fi" },
+              ],
+            },
+          };
+
+          this.currentMode = "pictionary";
+          this.currentDifficulty = "easy";
+          this.wordCount = 0;
+          this.streakCount = 0;
+          this.history = [];
+          this.maxHistory = 8;
+
+          this.init();
+        }
+
+        init() {
+          this.bindEvents();
+        }
+
+        bindEvents() {
+          // Mode selection
+          document.querySelectorAll(".mode-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              document
+                .querySelectorAll(".mode-btn")
+                .forEach((b) => b.classList.remove("active"));
+              e.target.classList.add("active");
+              this.currentMode = e.target.dataset.mode;
+              this.createEmojiBurst(
+                e.target.dataset.mode === "pictionary" ? "🎨" : "🎭",
+                e.clientX,
+                e.clientY
+              );
+            });
+          });
+
+          // Difficulty selection
+          document.querySelectorAll(".diff-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              document
+                .querySelectorAll(".diff-btn")
+                .forEach((b) => b.classList.remove("active"));
+              e.target.classList.add("active");
+              this.currentDifficulty = e.target.dataset.difficulty;
+              this.createEmojiBurst("⭐", e.clientX, e.clientY);
+            });
+          });
+
+          // Generate button
+          document
+            .getElementById("generateBtn")
+            .addEventListener("click", () => {
+              this.generateWord();
+            });
+
+          // Keyboard shortcut
+          document.addEventListener("keydown", (e) => {
+            if (e.code === "Space") {
+              e.preventDefault();
+              this.generateWord();
+            }
+          });
+        }
+
+        generateWord() {
+          const wordList = this.words[this.currentMode][this.currentDifficulty];
+          const randomIndex = Math.floor(Math.random() * wordList.length);
+          const selectedWord = wordList[randomIndex];
+
+          const wordDisplay = document.querySelector(".word-display");
+          const wordText = document.querySelector(".word-text");
+          const categoryContainer =
+            document.getElementById("category-container");
+
+          // Animate out
+          wordDisplay.style.animation = "none";
+          setTimeout(() => {
+            wordDisplay.style.animation =
+              "wordPop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)";
+          }, 10);
+
+          // Update word
+          wordText.textContent = selectedWord.word;
+          wordText.classList.remove("placeholder");
+
+          // Update category
+          categoryContainer.innerHTML = `<div class="category-badge">${selectedWord.category}</div>`;
+
+          // Update stats
+          this.wordCount++;
+          this.streakCount++;
+          document.getElementById("wordCount").textContent = this.wordCount;
+          document.getElementById("streakCount").textContent = this.streakCount;
+
+          // Update history
+          this.addToHistory(selectedWord.word);
+
+          // Create emoji burst
+          const emojis = ["✨", "🎉", "⭐", "💫", "🌟"];
+          const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+          this.createEmojiBurst(
+            randomEmoji,
+            window.innerWidth / 2,
+            window.innerHeight / 2
+          );
+        }
+
+        addToHistory(word) {
+          this.history.unshift(word);
+          if (this.history.length > this.maxHistory) {
+            this.history.pop();
+          }
+
+          const historyList = document.getElementById("historyList");
+          historyList.innerHTML = this.history
+            .map((w) => `<div class="history-item">${w}</div>`)
+            .join("");
+        }
+
+        createEmojiBurst(emoji, x, y) {
+          const burst = document.createElement("div");
+          burst.className = "emoji-burst";
+          burst.textContent = emoji;
+          burst.style.left = x + "px";
+          burst.style.top = y + "px";
+          document.body.appendChild(burst);
+
+          setTimeout(() => {
+            burst.remove();
+          }, 1000);
+        }
+      }
+
+      // Initialize the game when DOM is loaded
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          new GameGenerator();
+        });
+      } else {
+        new GameGenerator();
+      }
+    </script>
+    <script src="../shared/game-shell.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced Typing Game</title>
+    <link rel="stylesheet" href="../shared/game-shell.css" />
+    <link rel="stylesheet" href="../shared/pro-ui.css" />
+    <style>
+      /* Complete isolation from WordPress styles */
+      .typing-game-wrapper {
+        all: initial;
+        font-family: "Courier New", monospace;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        margin: 0;
+        box-sizing: border-box;
+        position: relative;
+        width: 100%;
+      }
+
+      .typing-game-wrapper * {
+        box-sizing: border-box;
+      }
+
+      .typing-game-wrapper .typing-container {
+        background: rgba(20, 20, 30, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        padding: 40px;
+        max-width: 1200px;
+        width: 95%;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(0, 255, 136, 0.3);
+      }
+
+      .typing-game-wrapper .typing-title {
+        color: #00ff88;
+        font-size: 2.8rem;
+        margin: 0 0 30px 0;
+        text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        letter-spacing: 3px;
+        font-weight: bold;
+        animation: glowTyping 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes glowTyping {
+        from {
+          text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        to {
+          text-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
+        }
+      }
+
+      .typing-game-wrapper .typing-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .typing-game-wrapper .stat-card {
+        background: rgba(0, 255, 136, 0.1);
+        padding: 15px;
+        border-radius: 15px;
+        border: 2px solid rgba(0, 255, 136, 0.3);
+        backdrop-filter: blur(5px);
+      }
+
+      .typing-game-wrapper .stat-label {
+        color: #00ff88;
+        font-size: 0.9rem;
+        margin: 0 0 5px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .typing-game-wrapper .stat-value {
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 0;
+      }
+
+      .typing-game-wrapper .typing-word-display {
+        font-size: 1.6rem;
+        margin: 30px 0;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 15px;
+        min-height: 140px;
+        max-height: 400px;
+        display: block;
+        text-align: left;
+        border: 3px solid rgba(0, 255, 136, 0.3);
+        color: #fff;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+        word-wrap: break-word;
+        word-break: break-word;
+        line-height: 1.6;
+        white-space: pre-wrap;
+      }
+
+      .typing-game-wrapper .typing-word-display::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 255, 136, 0.2),
+          transparent
+        );
+        animation: shimmerTyping 3s infinite;
+        pointer-events: none;
+      }
+
+      @keyframes shimmerTyping {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
+      /* Scrollbar styling for word display */
+      .typing-game-wrapper .typing-word-display::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .typing-game-wrapper .typing-word-display::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+      }
+
+      .typing-game-wrapper .typing-word-display::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 136, 0.5);
+        border-radius: 10px;
+      }
+
+      .typing-game-wrapper .typing-word-display::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 255, 136, 0.7);
+      }
+
+      .typing-game-wrapper .typing-input {
+        width: 100%;
+        padding: 20px;
+        font-size: 1.2rem;
+        border: 3px solid #00ff88;
+        background: rgba(0, 0, 0, 0.6);
+        color: #00ff88;
+        border-radius: 15px;
+        text-align: left;
+        margin-bottom: 25px;
+        font-family: "Courier New", monospace;
+        outline: none;
+        transition: all 0.3s ease;
+        font-weight: bold;
+      }
+
+      .typing-game-wrapper .typing-input:focus {
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        border-color: #00ffaa;
+        transform: scale(1.01);
+      }
+
+      .typing-game-wrapper .typing-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .typing-game-wrapper .typing-controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 25px 0;
+        flex-wrap: wrap;
+      }
+
+      .typing-game-wrapper .typing-btn {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        background: linear-gradient(45deg, #00ff88, #00cc6a);
+        color: #1a1a2e;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-family: "Courier New", monospace;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .typing-game-wrapper .typing-btn:hover:not(:disabled) {
+        background: linear-gradient(45deg, #00cc6a, #00ff88);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.5);
+      }
+
+      .typing-game-wrapper .typing-btn:active {
+        transform: translateY(0);
+      }
+
+      .typing-game-wrapper .typing-btn:disabled {
+        background: #666;
+        cursor: not-allowed;
+        opacity: 0.5;
+        transform: none;
+      }
+
+      .typing-game-wrapper .difficulty-selector {
+        margin: 20px 0;
+      }
+
+      .typing-game-wrapper .difficulty-selector label {
+        color: #00ff88;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .typing-game-wrapper .difficulty-selector select {
+        background: rgba(0, 0, 0, 0.6);
+        color: #00ff88;
+        border: 2px solid #00ff88;
+        border-radius: 8px;
+        padding: 8px 15px;
+        font-family: inherit;
+        font-size: 1rem;
+      }
+
+      .typing-game-wrapper .progress-container {
+        margin: 20px 0;
+      }
+
+      .typing-game-wrapper .progress-bar {
+        width: 100%;
+        height: 15px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid rgba(0, 255, 136, 0.3);
+      }
+
+      .typing-game-wrapper .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00ff88, #00cc6a);
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 8px;
+      }
+
+      .typing-game-wrapper .typing-message {
+        margin-top: 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        min-height: 30px;
+      }
+
+      .typing-game-wrapper .typing-message.correct {
+        color: #00ff88;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+      }
+
+      .typing-game-wrapper .typing-message.incorrect {
+        color: #ff4444;
+        text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+      }
+
+      .typing-game-wrapper .typing-message.game-over {
+        color: #ffaa00;
+        font-size: 1.5rem;
+        text-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+      }
+
+      .typing-game-wrapper .achievements {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(0, 255, 136, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 136, 0.2);
+      }
+
+      .typing-game-wrapper .achievement {
+        color: #ffaa00;
+        font-size: 0.9rem;
+        margin: 5px 0;
+      }
+
+      /* Typing effects */
+      .typing-game-wrapper .char-correct {
+        color: #00ff88;
+        background: rgba(0, 255, 136, 0.2);
+        border-radius: 3px;
+        padding: 1px 2px;
+      }
+
+      .typing-game-wrapper .char-incorrect {
+        color: #ff4444;
+        background: rgba(255, 68, 68, 0.2);
+        border-radius: 3px;
+        padding: 1px 2px;
+      }
+
+      .typing-game-wrapper .char-current {
+        background: rgba(255, 255, 255, 0.4);
+        animation: blinkTyping 1s infinite;
+        border-radius: 3px;
+        padding: 1px 2px;
+      }
+
+      @keyframes blinkTyping {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0.3;
+        }
+      }
+
+      /* Large words handling */
+      .typing-game-wrapper .typing-word-display.long-content {
+        font-size: 1.3rem;
+        padding: 25px;
+        line-height: 1.7;
+      }
+
+      .typing-game-wrapper .typing-word-display.extra-long-content {
+        font-size: 1.1rem;
+        padding: 20px;
+        line-height: 1.8;
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 768px) {
+        .typing-game-wrapper {
+          padding: 10px;
+        }
+
+        .typing-game-wrapper .typing-container {
+          padding: 25px 15px;
+          max-width: 100%;
+        }
+
+        .typing-game-wrapper .typing-title {
+          font-size: 2rem;
+          letter-spacing: 1px;
+        }
+
+        .typing-game-wrapper .typing-word-display {
+          font-size: 1.3rem;
+          padding: 20px 15px;
+          letter-spacing: 0.3px;
+          max-height: 300px;
+          line-height: 1.5;
+        }
+
+        .typing-game-wrapper .typing-word-display.long-content {
+          font-size: 1.1rem;
+        }
+
+        .typing-game-wrapper .typing-word-display.extra-long-content {
+          font-size: 1rem;
+        }
+
+        .typing-game-wrapper .typing-input {
+          font-size: 1.1rem;
+          padding: 15px;
+        }
+
+        .typing-game-wrapper .typing-controls {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .typing-game-wrapper .typing-btn {
+          width: 100%;
+          max-width: 250px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .typing-game-wrapper .typing-title {
+          font-size: 1.5rem;
+        }
+
+        .typing-game-wrapper .typing-word-display {
+          font-size: 1.1rem;
+          padding: 15px 10px;
+          max-height: 250px;
+          line-height: 1.4;
+        }
+
+        .typing-game-wrapper .typing-word-display.long-content {
+          font-size: 1rem;
+        }
+
+        .typing-game-wrapper .typing-word-display.extra-long-content {
+          font-size: 0.9rem;
+        }
+
+        .typing-game-wrapper .typing-input {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body data-game-name="Typing Challenge">
+    <div class="typing-game-wrapper">
+      <div class="typing-container">
+        <h1 class="typing-title">⚡ ULTIMATE TYPING CHALLENGE ⚡</h1>
+
+        <div class="typing-stats">
+          <div class="stat-card">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="typing-score">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Time</div>
+            <div class="stat-value" id="typing-timer">60</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">WPM</div>
+            <div class="stat-value" id="typing-wpm">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Accuracy</div>
+            <div class="stat-value" id="typing-accuracy">100%</div>
+          </div>
+        </div>
+
+        <div class="difficulty-selector">
+          <label for="typing-difficulty">Difficulty:</label>
+          <select id="typing-difficulty">
+            <option value="beginner">Beginner (90s)</option>
+            <option value="easy">Easy (60s)</option>
+            <option value="medium" selected>Medium (45s)</option>
+            <option value="hard">Hard (30s)</option>
+            <option value="expert">Expert (20s)</option>
+            <option value="nightmare">Nightmare (15s)</option>
+            <option value="impossible">Impossible (10s)</option>
+          </select>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="typing-progress"></div>
+          </div>
+        </div>
+
+        <div class="typing-word-display" id="typing-word-display">
+          Ready for the ultimate challenge? Hit START!
+        </div>
+
+        <input
+          type="text"
+          class="typing-input"
+          id="typing-input"
+          placeholder="Type the word/phrase above..."
+          disabled
+          autocomplete="off"
+        />
+
+        <div class="typing-controls">
+          <button class="typing-btn" id="typing-start-btn">
+            🚀 Start Challenge
+          </button>
+          <button class="typing-btn" id="typing-reset-btn" disabled>
+            🔄 Reset
+          </button>
+          <button class="typing-btn" id="typing-pause-btn" disabled>
+            ⏸️ Pause
+          </button>
+        </div>
+
+        <div class="typing-message" id="typing-message"></div>
+
+        <div
+          class="achievements"
+          id="typing-achievements"
+          style="display: none"
+        >
+          <h3 style="color: #00ff88; margin: 0 0 10px 0">
+            🏆 Achievements Unlocked!
+          </h3>
+          <div id="typing-achievement-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        class UltimateTypingChallenge {
+          constructor() {
+            this.words = {
+              beginner: [
+                "hello",
+                "world",
+                "typing",
+                "game",
+                "computer",
+                "keyboard",
+                "mouse",
+                "screen",
+                "window",
+                "button",
+                "click",
+                "type",
+                "word",
+                "letter",
+                "space",
+                "enter",
+                "start",
+                "stop",
+                "pause",
+                "reset",
+                "score",
+                "time",
+                "speed",
+                "fast",
+              ],
+              easy: [
+                "javascript",
+                "programming",
+                "development",
+                "algorithm",
+                "function",
+                "variable",
+                "database",
+                "network",
+                "software",
+                "hardware",
+                "internet",
+                "website",
+                "application",
+                "technology",
+                "innovation",
+                "creativity",
+                "challenge",
+                "adventure",
+                "education",
+                "learning",
+                "practice",
+                "improvement",
+                "performance",
+                "skill",
+              ],
+              medium: [
+                "implementation",
+                "configuration",
+                "authentication",
+                "optimization",
+                "synchronization",
+                "encapsulation",
+                "inheritance",
+                "polymorphism",
+                "abstraction",
+                "methodology",
+                "architecture",
+                "infrastructure",
+                "cybersecurity",
+                "cryptocurrency",
+                "blockchain",
+                "artificial intelligence",
+                "machine learning",
+                "data science",
+                "cloud computing",
+                "microservices",
+                "containerization",
+                "virtualization",
+                "distributed systems",
+              ],
+              hard: [
+                "constantinople",
+                "antidisestablishmentarianism",
+                "pseudopseudohypoparathyroidism",
+                "pneumonoultramicroscopicsilicovolcanoconiosis",
+                "floccinaucinihilipilification",
+                "supercalifragilisticexpialidocious",
+                "hippopotomonstrosesquippedaliophobia",
+                "electroencephalographically",
+                "psychopharmacologically",
+                "immunoelectrophoresis",
+                "spectrophotometrically",
+                "tetraiodophenolphthalein",
+                "hepaticocholangiogastrostomy",
+                "radioimmunoelectrophoresis",
+                "pneumoencephalographically",
+                "dichlorodifluoromethane",
+              ],
+              expert: [
+                "methionylthreonylthreonylglutaminylarginyl isoleucine",
+                "lopadotemachoselachogaleokranioleipsanodrimhypotrimmatosilphioparaomelitokatakechymenokichlepikossyphophattoperisteralektryonoptekephalliokigklopeleiolagoiosiraiobaphetraganopterygon",
+                "pneumonoultramicroscopicsilicovolcanoconiosis prevention methodology",
+                "supercalifragilisticexpialidocious extraordinaire manifestation",
+                "antidisestablishmentarianism revolutionary movement historical significance",
+                "pseudopseudohypoparathyroidism medical condition diagnostic criteria",
+                "floccinaucinihilipilification habitual practice psychological assessment",
+                "hippopotomonstrosesquippedaliophobia psychological disorder therapeutic intervention",
+                "electroencephalographically measured brain activity neurological assessment",
+                "immunoelectrophoresis laboratory technique molecular analysis protocol",
+              ],
+              nightmare: [
+                "The quick brown fox jumps over the lazy dog while simultaneously calculating the square root of 1729 and reciting the alphabet backwards in ancient Latin",
+                "Pneumonoultramicroscopicsilicovolcanoconiosis is an artificially long word said to mean a lung disease caused by the inhalation of very fine silicate or quartz dust",
+                "Antidisestablishmentarianism was a political position during the 19th century in Great Britain opposing proposals for the disestablishment of the Church of England",
+                "Supercalifragilisticexpialidocious is a nonsensical word popularized by the 1964 film Mary Poppins and has since appeared in many dictionaries as a humorous entry",
+                "Pseudopseudohypoparathyroidism is an inherited disorder closely related to pseudohypoparathyroidism but with normal levels of calcium and phosphate in the blood",
+                "Floccinaucinihilipilification is the action or habit of estimating something as worthless and represents one of the longest non-technical words in English",
+                "Hippopotomonstrosesquippedaliophobia is the fear of long words and is often considered ironic given that the word itself is extremely long and difficult to pronounce",
+                "Electroencephalographically speaking, brain waves can be measured and analyzed for medical diagnosis using sophisticated computer algorithms and pattern recognition",
+                "Immunoelectrophoresis combines electrophoresis and immunodiffusion techniques for protein analysis and is widely used in clinical laboratory diagnostics worldwide",
+                "Spectrophotometrically determined values provide accurate measurements of light absorption and are essential for quantitative analysis in analytical chemistry",
+              ],
+              impossible: [
+                "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation",
+                "The mitochondria is the powerhouse of the cell and plays a crucial role in cellular respiration and energy production mechanisms through complex biochemical pathways involving ATP synthesis",
+                "Deoxyribonucleicacid contains the genetic instructions used in the development and functioning of all known living organisms and many viruses through hereditary information storage",
+                "Acetylsalicylicacid commonly known as aspirin is a medication used to reduce pain fever and inflammation throughout the human body via cyclooxygenase enzyme inhibition mechanisms",
+                "Dichlorodifluoromethane is a colorless gas that was commonly used as a refrigerant and aerosol spray propellant until environmental concerns led to its phase-out under international agreements",
+                "Tetraiodophenolphthalein is a chemical compound used as a contrast agent in medical imaging procedures for diagnostic purposes particularly in radiological examinations of the digestive system",
+                "Pneumoencephalographically obtained images were historically used for diagnosing brain disorders before modern CT and MRI technology revolutionized neurological diagnostic imaging capabilities",
+                "Radioimmunoelectrophoresis is a laboratory technique that combines radioactive labeling with immunoelectrophoresis for protein detection and quantification in biological samples",
+                "Hepaticocholangiogastrostomy is a surgical procedure that creates an anastomosis between the hepatic duct and the stomach for bile drainage in complex hepatobiliary disorders",
+                "Psychopharmacologically active substances affect the mind emotions and behavior through their action on the nervous system via neurotransmitter modulation and receptor binding mechanisms",
+              ],
+            };
+
+            this.phrases = {
+              beginner: [
+                "Hello World",
+                "Good Morning",
+                "Thank You",
+                "How Are You",
+                "See You Later",
+                "Nice Day",
+                "Good Luck",
+                "Well Done",
+                "Try Again",
+                "Keep Going",
+              ],
+              easy: [
+                "Programming is Fun",
+                "Code Every Day",
+                "Debug with Patience",
+                "Learn Something New",
+                "Practice Makes Perfect",
+                "Never Give Up",
+                "Stay Motivated",
+                "Keep Learning",
+              ],
+              medium: [
+                "Artificial Intelligence Revolution",
+                "Machine Learning Algorithms",
+                "Data Science Analytics",
+                "Cloud Computing Infrastructure",
+                "Cybersecurity Protocols",
+                "Software Development Lifecycle",
+                "Agile Development Methodology",
+                "DevOps Integration Strategy",
+              ],
+              hard: [
+                "Quantum Computing Breakthrough Technology",
+                "Blockchain Cryptocurrency Decentralization",
+                "Biotechnology Genetic Engineering Advancement",
+                "Nanotechnology Molecular Manufacturing",
+                "Advanced Neural Network Architecture",
+                "Distributed Ledger Technology Innovation",
+              ],
+              expert: [
+                "Neuroengineering Brain Computer Interface Development",
+                "Computational Linguistics Natural Language Processing",
+                "Biomedical Engineering Tissue Regeneration Research",
+                "Astrophysics Cosmology Dark Matter Investigation",
+                "Quantum Entanglement Communication Protocol",
+              ],
+              nightmare: [
+                "Revolutionary Breakthrough in Quantum Entanglement Teleportation Technology Development",
+                "Advanced Artificial Intelligence Neural Network Deep Learning Architecture Implementation",
+                "Comprehensive Cybersecurity Framework Implementation Strategy for Enterprise Infrastructure",
+                "Sustainable Renewable Energy Grid Optimization Algorithm Development and Deployment",
+              ],
+              impossible: [
+                "Interdisciplinary Collaborative Research Initiative for Advanced Scientific Discovery and Innovation",
+                "Comprehensive Environmental Sustainability Assessment and Implementation Protocol Development",
+                "Revolutionary Biotechnology Genetic Engineering Therapeutic Applications Development Program",
+                "Advanced Computational Mathematics Algorithm Optimization Performance Enhancement Framework",
+              ],
+            };
+
+            this.elements = {
+              wordDisplay: document.getElementById("typing-word-display"),
+              input: document.getElementById("typing-input"),
+              score: document.getElementById("typing-score"),
+              timer: document.getElementById("typing-timer"),
+              wpm: document.getElementById("typing-wpm"),
+              accuracy: document.getElementById("typing-accuracy"),
+              progress: document.getElementById("typing-progress"),
+              startBtn: document.getElementById("typing-start-btn"),
+              resetBtn: document.getElementById("typing-reset-btn"),
+              pauseBtn: document.getElementById("typing-pause-btn"),
+              message: document.getElementById("typing-message"),
+              difficulty: document.getElementById("typing-difficulty"),
+              achievements: document.getElementById("typing-achievements"),
+              achievementList: document.getElementById(
+                "typing-achievement-list"
+              ),
+            };
+
+            this.gameState = {
+              active: false,
+              paused: false,
+              score: 0,
+              timeLeft: 45,
+              totalTime: 45,
+              currentWord: "",
+              correctWords: 0,
+              incorrectWords: 0,
+              startTime: 0,
+              achievements: [],
+            };
+
+            this.timer = null;
+            this.initGame();
+          }
+
+          initGame() {
+            this.bindEvents();
+            this.resetGame();
+          }
+
+          bindEvents() {
+            this.elements.startBtn.addEventListener("click", () =>
+              this.startGame()
+            );
+            this.elements.resetBtn.addEventListener("click", () =>
+              this.resetGame()
+            );
+            this.elements.pauseBtn.addEventListener("click", () =>
+              this.togglePause()
+            );
+
+            this.elements.input.addEventListener("input", () =>
+              this.handleInput()
+            );
+            this.elements.input.addEventListener("keypress", (e) => {
+              if (e.key === "Enter") this.checkWord();
+            });
+
+            // Fix capitalization issues
+            this.elements.input.addEventListener("keydown", (e) => {
+              // Allow normal typing behavior
+              if (e.key === "CapsLock") {
+                // Let caps lock work normally
+                return;
+              }
+            });
+
+            this.elements.difficulty.addEventListener("change", () =>
+              this.updateDifficulty()
+            );
+          }
+
+          updateDifficulty() {
+            const difficulty = this.elements.difficulty.value;
+            const timeMap = {
+              beginner: 90,
+              easy: 60,
+              medium: 45,
+              hard: 30,
+              expert: 20,
+              nightmare: 15,
+              impossible: 10,
+            };
+            this.gameState.totalTime = timeMap[difficulty];
+            this.gameState.timeLeft = timeMap[difficulty];
+            this.elements.timer.textContent = this.gameState.timeLeft;
+          }
+
+          getRandomWord() {
+            const difficulty = this.elements.difficulty.value;
+            const usePhrase = Math.random() < 0.4; // 40% chance for phrases
+
+            let wordList, phraseList;
+
+            if (usePhrase && this.phrases[difficulty]) {
+              phraseList = this.phrases[difficulty];
+              return phraseList[Math.floor(Math.random() * phraseList.length)];
+            } else {
+              wordList = this.words[difficulty];
+              return wordList[Math.floor(Math.random() * wordList.length)];
+            }
+          }
+
+          displayWord() {
+            this.gameState.currentWord = this.getRandomWord();
+
+            // Remove previous classes
+            this.elements.wordDisplay.classList.remove(
+              "long-content",
+              "extra-long-content"
+            );
+
+            // Add appropriate class based on word length
+            if (this.gameState.currentWord.length > 100) {
+              this.elements.wordDisplay.classList.add("extra-long-content");
+            } else if (this.gameState.currentWord.length > 50) {
+              this.elements.wordDisplay.classList.add("long-content");
+            }
+
+            // Create character spans with proper HTML escaping
+            this.elements.wordDisplay.innerHTML = this.gameState.currentWord
+              .split("")
+              .map((char, index) => {
+                // Escape HTML characters
+                const escapedChar = char
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#39;");
+                return `<span id="char-${index}">${escapedChar}</span>`;
+              })
+              .join("");
+
+            this.elements.input.value = "";
+            this.elements.input.focus();
+
+            // Scroll to top for new content
+            this.elements.wordDisplay.scrollTop = 0;
+          }
+
+          handleInput() {
+            if (!this.gameState.active || this.gameState.paused) return;
+
+            const typedText = this.elements.input.value;
+            const currentWord = this.gameState.currentWord;
+
+            // Visual feedback for each character
+            currentWord.split("").forEach((char, index) => {
+              const charElement = document.getElementById(`char-${index}`);
+              if (!charElement) return;
+
+              // Reset classes
+              charElement.className = "";
+
+              if (index < typedText.length) {
+                // Check character match (case-sensitive)
+                if (typedText[index] === char) {
+                  charElement.classList.add("char-correct");
+                } else {
+                  charElement.classList.add("char-incorrect");
+                }
+              } else if (index === typedText.length) {
+                charElement.classList.add("char-current");
+              }
+            });
+
+            // Auto-complete on exact match
+            if (typedText === currentWord) {
+              this.checkWord();
+            }
+          }
+
+          checkWord() {
+            const typedText = this.elements.input.value;
+
+            // Exact match required (case-sensitive)
+            if (typedText === this.gameState.currentWord) {
+              this.gameState.correctWords++;
+              const points = this.calculatePoints();
+              this.gameState.score += points;
+              this.showMessage("Perfect! +" + points + " points", "correct");
+              this.checkAchievements();
+            } else {
+              this.gameState.incorrectWords++;
+              this.showMessage(
+                "Try again! Check capitalization and spelling",
+                "incorrect"
+              );
+            }
+
+            this.updateStats();
+            this.displayWord();
+          }
+
+          calculatePoints() {
+            const difficulty = this.elements.difficulty.value;
+            const basePoints = {
+              beginner: 5,
+              easy: 10,
+              medium: 20,
+              hard: 35,
+              expert: 50,
+              nightmare: 75,
+              impossible: 100,
+            };
+            const wordLength = this.gameState.currentWord.length;
+            const difficultyMultiplier = {
+              beginner: 1,
+              easy: 1.2,
+              medium: 1.5,
+              hard: 2,
+              expert: 3,
+              nightmare: 4,
+              impossible: 5,
+            };
+
+            return Math.round(
+              (basePoints[difficulty] + wordLength * 3) *
+                difficultyMultiplier[difficulty]
+            );
+          }
+
+          updateStats() {
+            this.elements.score.textContent = this.gameState.score;
+
+            const totalWords =
+              this.gameState.correctWords + this.gameState.incorrectWords;
+            const accuracy =
+              totalWords > 0
+                ? Math.round((this.gameState.correctWords / totalWords) * 100)
+                : 100;
+            this.elements.accuracy.textContent = accuracy + "%";
+
+            const timeElapsed =
+              (this.gameState.totalTime - this.gameState.timeLeft) / 60;
+            const wpm =
+              timeElapsed > 0
+                ? Math.round(this.gameState.correctWords / timeElapsed)
+                : 0;
+            this.elements.wpm.textContent = wpm;
+
+            const progress =
+              ((this.gameState.totalTime - this.gameState.timeLeft) /
+                this.gameState.totalTime) *
+              100;
+            this.elements.progress.style.width = progress + "%";
+          }
+
+          startGame() {
+            this.gameState.active = true;
+            this.gameState.paused = false;
+            this.gameState.startTime = Date.now();
+
+            this.elements.input.disabled = false;
+            this.elements.startBtn.disabled = true;
+            this.elements.resetBtn.disabled = false;
+            this.elements.pauseBtn.disabled = false;
+            this.elements.difficulty.disabled = true;
+
+            this.displayWord();
+            this.startTimer();
+            this.showMessage(
+              "Challenge started! Type with precision!",
+              "correct"
+            );
+          }
+
+          startTimer() {
+            this.timer = setInterval(() => {
+              if (!this.gameState.paused) {
+                this.gameState.timeLeft--;
+                this.elements.timer.textContent = this.gameState.timeLeft;
+                this.updateStats();
+
+                if (this.gameState.timeLeft <= 0) {
+                  this.endGame();
+                }
+              }
+            }, 1000);
+          }
+
+          togglePause() {
+            this.gameState.paused = !this.gameState.paused;
+
+            if (this.gameState.paused) {
+              this.elements.pauseBtn.textContent = "▶️ Resume";
+              this.elements.input.disabled = true;
+              this.showMessage("Challenge paused", "incorrect");
+            } else {
+              this.elements.pauseBtn.textContent = "⏸️ Pause";
+              this.elements.input.disabled = false;
+              this.elements.input.focus();
+              this.showMessage("Challenge resumed!", "correct");
+            }
+          }
+
+          endGame() {
+            this.gameState.active = false;
+            clearInterval(this.timer);
+
+            this.elements.input.disabled = true;
+            this.elements.startBtn.disabled = false;
+            this.elements.pauseBtn.disabled = true;
+            this.elements.difficulty.disabled = false;
+
+            const finalWpm = Math.round(
+              this.gameState.correctWords / (this.gameState.totalTime / 60)
+            );
+            const accuracy =
+              Math.round(
+                (this.gameState.correctWords /
+                  (this.gameState.correctWords +
+                    this.gameState.incorrectWords)) *
+                  100
+              ) || 100;
+
+            this.showMessage(
+              `🏁 Challenge Complete! Score: ${this.gameState.score} | WPM: ${finalWpm} | Accuracy: ${accuracy}%`,
+              "game-over"
+            );
+
+            this.checkFinalAchievements(finalWpm, accuracy);
+          }
+
+          checkAchievements() {
+            const achievements = [];
+
+            if (
+              this.gameState.score >= 200 &&
+              !this.gameState.achievements.includes("achiever")
+            ) {
+              achievements.push("🎯 High Achiever - Reached 200 points!");
+              this.gameState.achievements.push("achiever");
+            }
+
+            if (
+              this.gameState.correctWords >= 15 &&
+              !this.gameState.achievements.includes("wordmaster")
+            ) {
+              achievements.push("📝 Word Master - Typed 15 words perfectly!");
+              this.gameState.achievements.push("wordmaster");
+            }
+
+            if (
+              this.gameState.score >= 1000 &&
+              !this.gameState.achievements.includes("champion")
+            ) {
+              achievements.push("👑 Typing Champion - Reached 1000 points!");
+              this.gameState.achievements.push("champion");
+            }
+
+            this.displayAchievements(achievements);
+          }
+
+          checkFinalAchievements(wpm, accuracy) {
+            const achievements = [];
+
+            if (
+              wpm >= 60 &&
+              !this.gameState.achievements.includes("speedmaster")
+            ) {
+              achievements.push("⚡ Speed Master - 60+ WPM!");
+              this.gameState.achievements.push("speedmaster");
+            }
+
+            if (
+              accuracy >= 98 &&
+              !this.gameState.achievements.includes("perfectionist")
+            ) {
+              achievements.push("🎯 Perfectionist - 98%+ Accuracy!");
+              this.gameState.achievements.push("perfectionist");
+            }
+
+            if (
+              wpm >= 80 &&
+              !this.gameState.achievements.includes("lightning")
+            ) {
+              achievements.push("⚡ Lightning Fingers - 80+ WPM!");
+              this.gameState.achievements.push("lightning");
+            }
+
+            const difficulty = this.elements.difficulty.value;
+            if (
+              (difficulty === "nightmare" || difficulty === "impossible") &&
+              wpm >= 40
+            ) {
+              achievements.push(
+                "💀 Nightmare Conqueror - Survived the impossible!"
+              );
+              this.gameState.achievements.push("nightmare");
+            }
+
+            this.displayAchievements(achievements);
+          }
+
+          displayAchievements(achievements) {
+            if (achievements.length > 0) {
+              this.elements.achievements.style.display = "block";
+              achievements.forEach((achievement) => {
+                const div = document.createElement("div");
+                div.className = "achievement";
+                div.textContent = achievement;
+                this.elements.achievementList.appendChild(div);
+              });
+            }
+          }
+
+          resetGame() {
+            clearInterval(this.timer);
+            this.updateDifficulty();
+
+            this.gameState = {
+              active: false,
+              paused: false,
+              score: 0,
+              timeLeft: this.gameState.totalTime,
+              totalTime: this.gameState.totalTime,
+              currentWord: "",
+              correctWords: 0,
+              incorrectWords: 0,
+              startTime: 0,
+              achievements: [],
+            };
+
+            this.elements.score.textContent = "0";
+            this.elements.wpm.textContent = "0";
+            this.elements.accuracy.textContent = "100%";
+            this.elements.timer.textContent = this.gameState.timeLeft;
+            this.elements.progress.style.width = "0%";
+            this.elements.wordDisplay.textContent =
+              "Ready for the ultimate challenge? Hit START!";
+            this.elements.wordDisplay.classList.remove(
+              "long-content",
+              "extra-long-content"
+            );
+            this.elements.input.value = "";
+            this.elements.input.disabled = true;
+            this.elements.startBtn.disabled = false;
+            this.elements.resetBtn.disabled = true;
+            this.elements.pauseBtn.disabled = true;
+            this.elements.pauseBtn.textContent = "⏸️ Pause";
+            this.elements.difficulty.disabled = false;
+            this.elements.message.textContent = "";
+            this.elements.achievements.style.display = "none";
+            this.elements.achievementList.innerHTML = "";
+          }
+
+          showMessage(text, type) {
+            this.elements.message.textContent = text;
+            this.elements.message.className = `typing-message ${type}`;
+
+            setTimeout(() => {
+              if (this.elements.message.classList.contains(type)) {
+                this.elements.message.textContent = "";
+                this.elements.message.className = "typing-message";
+              }
+            }, 3000);
+          }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => {
+            new UltimateTypingChallenge();
+          });
+        } else {
+          new UltimateTypingChallenge();
+        }
+      })();
+    </script>
+    <script src="../shared/game-shell.js"></script>
+  </body>
+</html>

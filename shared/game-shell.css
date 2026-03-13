@@ -1,0 +1,52 @@
+.game-shell-topbar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 99999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.game-shell-badge,
+.game-shell-link {
+  pointer-events: auto;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.game-shell-badge {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.game-shell-link {
+  background: rgba(37, 99, 235, 0.86);
+}
+
+.game-shell-link:hover {
+  background: rgba(29, 78, 216, 0.95);
+}
+
+@media (max-width: 600px) {
+  .game-shell-topbar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+  .game-shell-badge,
+  .game-shell-link {
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+}
